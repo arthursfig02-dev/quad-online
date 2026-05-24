@@ -1,0 +1,107 @@
+/* ── Base ──────────────────────────────────────────────── */
+.menu {
+  position: fixed;
+  top: var(--shell-header-h);
+  left: 0;
+  height: 100%;
+  bottom: var(--shell-footer-h);
+  background: #0b1c2d;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width .25s ease;
+  z-index: 900;
+}
+
+.list {
+  list-style: none;
+  padding: 8px 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Item de navegação ─────────────────────────────────── */
+.item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.7);
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background .18s, color .18s;
+  white-space: nowrap;
+}
+
+.item:hover {
+  background: rgba(47,111,237,.35);
+  color: #fff;
+}
+
+.icon {
+  font-size: 17px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.label {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ── Botão toggle (desktop) ────────────────────────────── */
+.toggleBtn {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.5);
+  font-size: 14px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: color .18s;
+}
+.toggleBtn:hover { color: #fff; }
+
+/* ════════════════════════════════════════════════════════
+   DESKTOP  (>= 900px)
+   Aberto  → largura total (220px) — labels visíveis
+   Fechado → largura ícones (56px) — labels ocultos
+   ════════════════════════════════════════════════════════ */
+.desktop.open   { width: var(--shell-menu-w-open); }
+.desktop.closed { width: var(--shell-menu-w-icons); }
+
+.desktop.closed .label  { opacity: 0; width: 0; pointer-events: none; }
+.desktop.open   .label  { opacity: 1; transition: opacity .2s .05s; }
+
+/* ════════════════════════════════════════════════════════
+   MOBILE  (< 900px)
+   Menu desliza sobre o conteúdo (drawer)
+   Aberto  → visível; Fechado → fora da tela
+   ════════════════════════════════════════════════════════ */
+.mobile {
+  width: 70vw;
+  max-width: 280px;
+  transform: translateX(-100%);
+  transition: transform .25s ease;
+  z-index: 990;
+}
+
+.mobile.open  { transform: translateX(0); }
+.mobile.closed{ transform: translateX(-100%); }
+
+/* Overlay escuro atrás do drawer */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(2px);
+  z-index: 980;
+}

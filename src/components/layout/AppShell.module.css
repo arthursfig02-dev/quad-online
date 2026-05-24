@@ -1,0 +1,20 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* body = área à direita do menu (desktop) ou largura total (mobile) */
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-top: var(--shell-header-h);
+  transition: margin-left .25s ease;
+  min-height: calc(100vh - var(--shell-header-h));
+}
+
+.main {
+  flex: 1;
+  overflow-x: hidden;
+}
