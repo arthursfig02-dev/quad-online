@@ -3,18 +3,32 @@ import s from './Home.module.css'
 
 const CARDS = [
   {
-    to:      '/vida-ministerio',
-    icon:    'fa-book-bible',
-    color:   '#0e097f',
-    title:   'Vida e Ministério',
-    desc:    'Monte a programação da reunião de meio de semana com editor completo e exportação em PDF.',
+    to:    '/vida-ministerio',
+    icon:  'fa-book-bible',
+    color: '#0e097f',
+    title: 'Vida e Ministério',
+    desc:  'Monte a programação da reunião de meio de semana com editor completo e exportação em PDF.',
   },
   {
-    to:      '/reuniao-publica',
-    icon:    'fa-person-chalkboard',
-    color:   '#1e3a6e',
-    title:   'Reunião Pública',
-    desc:    'Organize a programação mensal da reunião pública com oradores, temas e leitor.',
+    to:    '/reuniao-publica',
+    icon:  'fa-person-chalkboard',
+    color: '#1e3a6e',
+    title: 'Reunião Pública',
+    desc:  'Organize a programação mensal da reunião pública com oradores, temas e leitor.',
+  },
+  {
+    to:    '/designacoes-mecanicas',
+    icon:  'fa-list-check',
+    color: '#237db1',
+    title: 'Designações Mecânicas',
+    desc:  'Gerencie indicadores, volantes, som e palco semana a semana com exportação em PDF.',
+  },
+  {
+    to:    '/programacao-campo',
+    icon:  'fa-calendar-days',
+    color: '#3b2d25',
+    title: 'Programação de Campo',
+    desc:  'Monte o calendário mensal de campo com horários, locais e dirigentes por dia.',
   },
 ]
 

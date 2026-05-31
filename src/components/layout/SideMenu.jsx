@@ -1,37 +1,28 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import s from './SideMenu.module.css'
 
 const NAV_ITEMS = [
-  { to: '/',                icon: 'fa-house',      label: 'Início'            },
-  { to: '/vida-ministerio', icon: 'fa-book-bible', label: 'Vida e Ministério' },
-  { to: '/reuniao-publica', icon: 'fa-person-chalkboard', label: 'Reunião Pública' },
+  { to: '/',                       icon: 'fa-house',               label: 'Início'                   },
+  { to: '/vida-ministerio',        icon: 'fa-book-bible',          label: 'Vida e Ministério'        },
+  { to: '/reuniao-publica',        icon: 'fa-person-chalkboard',   label: 'Reunião Pública'          },
+  { to: '/designacoes-mecanicas',  icon: 'fa-list-check',          label: 'Designações Mecânicas'    },
+  { to: '/programacao-campo',      icon: 'fa-calendar-days',       label: 'Programação de Campo'     },
 ]
 
-/**
- * SideMenu
- *
- * open         → bool — menu aberto?
- * onClose      → fn   — fecha o menu (mobile)
- * onToggle     → fn   — alterna aberto/fechado (desktop)
- * isMobile     → bool — estamos em tela < 900px?
- */
 export default function SideMenu({ open, onClose, onToggle, isMobile }) {
   const navigate = useNavigate()
 
   function handleNavClick(to) {
     navigate(to)
-    // Em qualquer tamanho recolhe ao navegar
     if (isMobile) {
       onClose()
     } else {
-      // Desktop: recolhe para modo ícones
       if (open) onToggle()
     }
   }
 
   return (
     <>
-      {/* Overlay escuro — apenas mobile */}
       {isMobile && open && (
         <div className={s.overlay} onClick={onClose} aria-hidden="true" />
       )}
@@ -44,7 +35,6 @@ export default function SideMenu({ open, onClose, onToggle, isMobile }) {
         ].join(' ')}
         aria-label="Menu de navegação"
       >
-        {/* Botão toggle visível em desktop */}
         {!isMobile && (
           <button
             className={s.toggleBtn}

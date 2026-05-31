@@ -3,6 +3,7 @@ import Toast from '../components/ui/Toast'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
+import PreviewModal from '../components/ui/PreviewModal'
 
 /* ── Imagens (substituir pelos arquivos reais em src/assets/images/) ── */
 import tesouImg from '../assets/images/tesou.jpg'
@@ -181,19 +182,21 @@ export default function VidaMinisterio() {
   const [cantico3,    setCantico3]    = useState('')
   const [oracaoFinal, setOracaoFinal] = useState('')
 
+  const [showPreview, setShowPreview] = useState(false)
   const mark = () => setUnsaved(true)
 
   /* ── Wrappers de setter que marcam unsaved ── */
   const set = fn => v => { fn(v); mark() }
 
   /* ── Export hook ─────────────────────────── */
-  const { exportPDF, exportIMG, printPreview } = useExport(previewRef, {
+  const { exportPDF, exportIMG, printPreview, openPreview } = useExport(previewRef, {
     onStart: msg => setOverlay({ visible: true, msg }),
     onEnd:   (msg, type) => {
       setOverlay({ visible: false, msg: '' })
       toastRef.current?.show(msg, type)
     },
     onError: msg => toastRef.current?.show(msg, 'error'),
+    onOpenPreview: () => setShowPreview(true),
     filename: 'vida-e-ministerio',
   })
 
@@ -322,16 +325,7 @@ export default function VidaMinisterio() {
   const actions = [
     { id: 'salvar',   icon: 'fa-cloud-arrow-up',   label: 'Salvar',         onClick: saveData    },
     { id: 'carregar', icon: 'fa-cloud-arrow-down',  label: 'Carregar',       onClick: loadData    },
-    { id: 'preview',  icon: 'fa-eye',               label: 'Pré-Visualizar', onClick: () => {
-        const w = window.open('', '_blank')
-        if (!w) return
-        let styles = ''
-        document.querySelectorAll('style').forEach(s => { styles += s.outerHTML })
-        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => { styles += l.outerHTML })
-        w.document.write(`<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><title>Pré-Visualização</title>${styles}<style>body{margin:0;padding:20px;background:#e9eef6;display:flex;justify-content:center;}</style></head><body>${previewRef.current?.outerHTML || ''}</body></html>`)
-        w.document.close()
-      }
-    },
+    { id: 'preview',  icon: 'fa-eye',               label: 'Pré-Visualizar', onClick: openPreview },
     { id: 'imprimir', icon: 'fa-print',             label: 'Imprimir',       onClick: printPreview },
     { id: 'pdf',      icon: 'fa-file-pdf',           label: 'Baixar PDF',     onClick: () => exportPDF('Gerando PDF…')  },
     { id: 'foto',     icon: 'fa-image',              label: 'Baixar Foto',    onClick: () => exportIMG('Gerando imagem…') },
@@ -349,6 +343,13 @@ export default function VidaMinisterio() {
       <ExportOverlay visible={overlay.visible} msg={overlay.msg} />
       <Toast ref={toastRef} />
 
+      {showPreview && (
+        <PreviewModal
+          previewRef={previewRef}
+          onClose={() => setShowPreview(false)}
+          title="Vida e Ministério"
+        />
+      )}
       <PageActionBar actions={actions} unsaved={unsaved} />
 
       <div className="vm-layout">
@@ -472,7 +473,7 @@ export default function VidaMinisterio() {
         </div>
 
         {/* ── PREVIEW (fora da tela em mobile, visível em desktop) ── */}
-        <article id="vi-previsu" ref={previewRef} aria-label="Pré-visualização da programação">
+        <article id="vi-previsu" className="vi-previsu" ref={previewRef} aria-label="Pré-visualização da programação">
           <section className="cabe-topo">
             <div className="con-titu">
               <span className={`pv-congregacao${!congregacao ? ' pv-empty' : ''}`}>{pv(congregacao, 'Congregação')}</span>
@@ -610,7 +611,7 @@ export default function VidaMinisterio() {
    ════════════════════════════════════════════════════════════ */
 const VM_STYLES = `
   .vm-layout {
-  margin-top:40px;
+    margin-top: 58px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -699,8 +700,8 @@ const VM_STYLES = `
   .visita-ss-toggle input:checked ~ .vss-box { background:var(--ed-acc); border-color:var(--ed-acc); }
   .vss-label { font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--ed-lbl); white-space:nowrap; }
   /* ── PREVIEW ── */
-  #vi-previsu { width:21cm; min-height:29.7cm; border:1px solid #d9ddeb; padding:.5cm; background:#fff; color:#000; font-family:Arial,sans-serif; flex-shrink:0; box-shadow:0 8px 30px rgba(15,23,42,.12); }
-  #vi-previsu * { font-family:Arial,sans-serif; }
+  .vi-previsu { width:21cm; min-height:29.7cm; border:1px solid #d9ddeb; padding:.5cm; background:#fff; color:#000; font-family:Arial,sans-serif; flex-shrink:0; box-shadow:0 8px 30px rgba(15,23,42,.12); }
+  .vi-previsu * { font-family:Arial,sans-serif; }
   .cabe-topo { margin-bottom:4px; }
   .con-titu { display:flex; justify-content:space-around; align-items:center; }
   .con-titu .pv-congregacao { font-size:14pt; font-weight:bold; }
@@ -740,7 +741,7 @@ const VM_STYLES = `
   @media print {
     body { background:#fff!important; }
     #vi-editor { display:none!important; }
-    #vi-previsu {
+    .vi-previsu {
       display:block!important; border:none!important; box-shadow:none!important;
       width:21cm!important; min-height:29.7cm!important; padding:.5cm!important; margin:0 auto!important;
     }

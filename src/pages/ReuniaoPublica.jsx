@@ -3,6 +3,7 @@ import Toast from '../components/ui/Toast'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
+import PreviewModal from '../components/ui/PreviewModal'
 
 import oradorImg from '../assets/images/orador.placeholder.svg'
 
@@ -36,13 +37,15 @@ export default function ReuniaoPublica() {
   const [semanas,     setSemanas]     = useState([novaSemana(1)])
   const [semanaAtual, setSemanaAtual] = useState(2)  // próximo número
   const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
+  const [showPreview, setShowPreview] = useState(false)
 
   /* ── Export hook ─────────────────────────────────────── */
   const filename = `Reunião-Pública-${(mes || 'sem-mes').toLowerCase().replace(/\s+/g,'-')}-${ano || 'sem-ano'}`
-  const { exportPDF, exportIMG, printPreview } = useExport(previewRef, {
+  const { exportPDF, exportIMG, printPreview, openPreview } = useExport(previewRef, {
     onStart: msg => setOverlay({ visible: true, msg }),
     onEnd:   (msg, type) => { setOverlay({ visible: false, msg: '' }); toastRef.current?.show(msg, type) },
     onError: msg => toastRef.current?.show(msg, 'error'),
+    onOpenPreview: () => setShowPreview(true),
     filename,
   })
 
@@ -94,17 +97,6 @@ export default function ReuniaoPublica() {
     setSemanas(prev => prev.filter(s => s.num !== num))
   }
 
-  /* ── Preview: pré-visualizar em nova aba ─────────────── */
-  function openPreview() {
-    const w = window.open('', '_blank')
-    if (!w) { toastRef.current?.show('Popup bloqueado.', 'warning'); return }
-    let styles = ''
-    document.querySelectorAll('style').forEach(s => { styles += s.outerHTML })
-    document.querySelectorAll('link[rel="stylesheet"]').forEach(l => { styles += l.outerHTML })
-    w.document.write(`<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><title>Pré-Visualização</title>${styles}<style>body{margin:0;padding:20px;background:#e9eef6;display:flex;justify-content:center;}</style></head><body>${previewRef.current?.outerHTML || ''}</body></html>`)
-    w.document.close()
-  }
-
   /* ── Ações da barra ──────────────────────────────────── */
   const actions = [
     { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: saveData  },
@@ -123,6 +115,13 @@ export default function ReuniaoPublica() {
       <style>{RP_STYLES}</style>
       <ExportOverlay visible={overlay.visible} msg={overlay.msg} />
       <Toast ref={toastRef} />
+      {showPreview && (
+        <PreviewModal
+          previewRef={previewRef}
+          onClose={() => setShowPreview(false)}
+          title="Reunião Pública"
+        />
+      )}
       <PageActionBar actions={actions} />
 
       <div className="rp-layout">
@@ -232,7 +231,8 @@ const RP_STYLES = `
     justify-content: center;
     align-items: flex-start;
     gap: 20px;
-    padding: 10px 16px 60px;
+    padding: 10px 16px 80px;
+    margin-top: 58px;
     background: #E9ECEF;
     min-height: 100%;
   }

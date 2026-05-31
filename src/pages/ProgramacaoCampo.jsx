@@ -1,0 +1,576 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import Toast from '../components/ui/Toast'
+import ExportOverlay from '../components/ui/ExportOverlay'
+import PageActionBar from '../components/ui/PageActionBar'
+import PreviewModal from '../components/ui/PreviewModal'
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
+
+const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+const DIAS_FULL   = ['Segunda-Feira','Terça-Feira','Quarta-Feira','Quinta-Feira','Sexta-Feira','Sábado','Domingo']
+const CORES_BG    = ['#fffbe6','#ffefc0','#ffd780','#ffc14d','#f5a623']
+
+function diaSemanaIdx(jsDay) { return (jsDay + 6) % 7 }
+
+function gerarSemanas(ano, mes) {
+  const totalDias   = new Date(ano, mes + 1, 0).getDate()
+  const primeiroDia = new Date(ano, mes, 1).getDay()
+  const offset      = diaSemanaIdx(primeiroDia)
+  const grade = []
+  for (let i = 0; i < offset; i++) grade.push(null)
+  for (let d = 1; d <= totalDias; d++) grade.push(d)
+  while (grade.length % 7 !== 0) grade.push(null)
+  const semanas = []
+  for (let i = 0; i < grade.length; i += 7) semanas.push(grade.slice(i, i + 7))
+  return semanas
+}
+
+/* ── Modal de horário ── */
+function ModalHorario({ ctx, onClose, onSave }) {
+  const [horario,   setHorario]   = useState(ctx?.dado?.horario   || '')
+  const [local,     setLocal]     = useState(ctx?.dado?.local      || '')
+  const [dirigente, setDirigente] = useState(ctx?.dado?.dirigente  || '')
+
+  useEffect(() => {
+    setHorario(ctx?.dado?.horario   || '')
+    setLocal(ctx?.dado?.local      || '')
+    setDirigente(ctx?.dado?.dirigente  || '')
+  }, [ctx])
+
+  if (!ctx) return null
+
+  return (
+    <div className="pc-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="pc-modal">
+        <h3>{ctx.hi === null ? 'Adicionar horário' : 'Editar horário'}</h3>
+        <p className="pc-modal-sub">Dia {ctx.diaNum}</p>
+        <div className="pc-campo"><label>Horário</label>
+          <input type="time" value={horario} onChange={e => setHorario(e.target.value)} autoFocus />
+        </div>
+        <div className="pc-campo"><label>Local</label>
+          <input type="text" placeholder="Local do campo" value={local} onChange={e => setLocal(e.target.value)} />
+        </div>
+        <div className="pc-campo"><label>Dirigente</label>
+          <input type="text" placeholder="Nome do dirigente" value={dirigente} onChange={e => setDirigente(e.target.value)} />
+        </div>
+        <div className="pc-modal-acoes">
+          <button className="pc-btn-aplicar" onClick={() => onSave({ horario, local, dirigente })}>Aplicar</button>
+          <button className="pc-btn-cancelar" onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Modal de preview ── */
+function ModalPreview({ docRef, onClose }) {
+  const containerRef = useRef()
+
+  useEffect(() => {
+    function escalar() {
+      const c = containerRef.current
+      const el = docRef.current
+      if (!c || !el) return
+      const dispW = c.clientWidth - 32
+      const dispH = c.clientHeight - 16
+      const scale = Math.min(dispW / 794, dispH / 1123, 1)
+      el.style.transform = `scale(${scale})`
+      el.style.transformOrigin = 'top left'
+      c.style.width  = (794 * scale) + 'px'
+      c.style.height = (1123 * scale) + 'px'
+    }
+    escalar()
+    window.addEventListener('resize', escalar)
+    return () => window.removeEventListener('resize', escalar)
+  }, [docRef])
+
+  return (
+    <div className="pc-modal-preview-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="pc-modal-preview-box">
+        <div className="pc-modal-preview-header">
+          <span className="pc-modal-preview-label">Pré-visualização — A4</span>
+          <button className="pc-modal-preview-fechar" onClick={onClose}>✕</button>
+        </div>
+        <div className="pc-modal-preview-scroll" ref={containerRef}>
+          {/* o documento A4 é renderizado aqui via portal de ref */}
+          <div id="pc-preview-host" style={{ position:'relative', overflow:'hidden', flexShrink:0 }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ════════════════════════════════════════════════════════
+   PÁGINA
+   ════════════════════════════════════════════════════════ */
+export default function ProgramacaoCampo() {
+  const toastRef   = useRef()
+  const docRef     = useRef()   // ref para #documento-exportavel
+
+  const agora = new Date()
+  const [anoAtual,  setAnoAtual]  = useState(agora.getFullYear())
+  const [mesAtual,  setMesAtual]  = useState(agora.getMonth())
+  const [congreg,   setCongr]     = useState('')
+  const [dados,     setDados]     = useState({})
+  const [destaques, setDestaques] = useState({})
+  const [obs,       setObs]       = useState({})
+  const [modalCtx,  setModalCtx]  = useState(null)
+  const [showPreview, setShowPreview]  = useState(false)
+  const [overlay,   setOverlay]   = useState({ visible: false, msg: '' })
+
+  function chaveLS() { return `programacao-campo:${anoAtual}-${mesAtual}` }
+
+  /* ── LS ── */
+  function salvarLS(d = dados, dest = destaques, o = obs, cong = congreg) {
+    localStorage.setItem(chaveLS(), JSON.stringify({ dados: d, diasDestacados: dest, observacoes: o, congregacao: cong }))
+  }
+  function carregarLS(ano = anoAtual, mes = mesAtual) {
+    try {
+      const raw = localStorage.getItem(`programacao-campo:${ano}-${mes}`)
+      if (!raw) return { dados:{}, diasDestacados:{}, observacoes:{}, congregacao:'' }
+      return JSON.parse(raw)
+    } catch { return { dados:{}, diasDestacados:{}, observacoes:{}, congregacao:'' } }
+  }
+
+  useEffect(() => {
+    const d = carregarLS(anoAtual, mesAtual)
+    setDados(d.dados || {})
+    setDestaques(d.diasDestacados || {})
+    setObs(d.observacoes || {})
+    setCongr(d.congregacao || '')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anoAtual, mesAtual])
+
+  /* ── troca mês ── */
+  function trocarMes(novoAno, novoMes) {
+    setAnoAtual(novoAno); setMesAtual(novoMes)
+    setDados({}); setDestaques({}); setObs({}); setCongr('')
+  }
+
+  /* ── horários ── */
+  function abrirModal(diaNum, hi, dado) {
+    setModalCtx({ diaNum, hi, dado })
+  }
+  function fecharModal() { setModalCtx(null) }
+  function salvarHorario(novoDado) {
+    setDados(prev => {
+      const next = { ...prev }
+      if (!next[modalCtx.diaNum]) next[modalCtx.diaNum] = []
+      const lista = [...(next[modalCtx.diaNum] || [])]
+      if (modalCtx.hi === null) lista.push(novoDado)
+      else lista[modalCtx.hi] = novoDado
+      next[modalCtx.diaNum] = lista
+      salvarLS(next, destaques, obs, congreg)
+      return next
+    })
+    fecharModal()
+  }
+  function removerHorario(diaNum, hi) {
+    setDados(prev => {
+      const next = { ...prev }
+      const lista = [...(next[diaNum] || [])]
+      lista.splice(hi, 1)
+      next[diaNum] = lista
+      salvarLS(next, destaques, obs, congreg)
+      return next
+    })
+  }
+  function toggleDestaque(diaNum) {
+    setDestaques(prev => {
+      const next = { ...prev, [diaNum]: !prev[diaNum] }
+      salvarLS(dados, next, obs, congreg)
+      return next
+    })
+  }
+  function atualizarObs(diaNum, valor) {
+    setObs(prev => {
+      const next = { ...prev, [diaNum]: valor }
+      salvarLS(dados, destaques, next, congreg)
+      return next
+    })
+  }
+  function atualizarCongr(val) {
+    setCongr(val)
+    salvarLS(dados, destaques, obs, val)
+  }
+
+  /* ── captura do documento A4 ── */
+  const capturarDoc = useCallback(async () => {
+    const el = docRef.current
+    if (!el) throw new Error('Documento não encontrado')
+    el.style.visibility = 'visible'
+    await new Promise(r => requestAnimationFrame(r))
+    const canvas = await html2canvas(el, {
+      scale: 2, useCORS: true, width: 794, height: 1123,
+      windowWidth: 794, windowHeight: 1123,
+    })
+    el.style.visibility = 'hidden'
+    return canvas
+  }, [])
+
+  /* ── exportações ── */
+  async function exportarPDF() {
+    setOverlay({ visible: true, msg: 'Gerando PDF…' })
+    try {
+      const canvas = await capturarDoc()
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297)
+      pdf.save(`programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.pdf`)
+      toastRef.current?.show('✔ PDF exportado!', 'success')
+    } catch(e) { console.error(e); toastRef.current?.show('Erro ao gerar PDF.', 'error') }
+    setOverlay({ visible: false, msg: '' })
+  }
+  async function exportarIMG() {
+    setOverlay({ visible: true, msg: 'Gerando imagem…' })
+    try {
+      const canvas = await capturarDoc()
+      const blob = await new Promise((res,rej) => canvas.toBlob(b => b ? res(b) : rej(), 'image/jpeg', 0.95))
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url; a.download = `programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.jpg`
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 5000)
+      toastRef.current?.show('✔ Imagem exportada!', 'success')
+    } catch(e) { console.error(e); toastRef.current?.show('Erro ao gerar imagem.', 'error') }
+    setOverlay({ visible: false, msg: '' })
+  }
+  async function imprimirDoc() {
+    try {
+      const canvas = await capturarDoc()
+      const imgSrc = canvas.toDataURL('image/jpeg', 0.95)
+      const win = window.open('', '_blank')
+      win.document.write(`<!DOCTYPE html><html><head><title>Programação de Campo</title>
+        <style>@page{margin:0;size:A4}body{margin:0;padding:0}img{width:100%;height:auto;display:block}</style>
+        </head><body><img src="${imgSrc}" />
+        <script>window.onload=function(){window.print()}<\/script></body></html>`)
+      win.document.close()
+    } catch(e) { toastRef.current?.show('Erro ao imprimir.', 'error') }
+  }
+
+  /* ── salvar/carregar arquivo JSON ── */
+  /* ── Salvar / Carregar via localStorage ── */
+  function salvarDados() {
+    salvarLS(dados, destaques, obs, congreg)
+    toastRef.current?.show('✔ Dados salvos!', 'success')
+  }
+  function carregarDados() {
+    const d = carregarLS(anoAtual, mesAtual)
+    setDados(d.dados || {})
+    setDestaques(d.diasDestacados || {})
+    setObs(d.observacoes || {})
+    setCongr(d.congregacao || '')
+    toastRef.current?.show('📂 Dados carregados!', 'info')
+  }
+
+  const semanas = gerarSemanas(anoAtual, mesAtual)
+
+  const actions = [
+    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: salvarDados   },
+    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: carregarDados },
+    { id: 'preview',  icon: 'fa-eye',              label: 'Pré-Visualizar', onClick: () => setShowPreview(true) },
+    { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: imprimirDoc  },
+    { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: exportarPDF  },
+    { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: exportarIMG  },
+  ]
+
+  return (
+    <>
+      <style>{PC_STYLES}</style>
+      <ExportOverlay visible={overlay.visible} msg={overlay.msg} />
+      <Toast ref={toastRef} />
+      <PageActionBar actions={actions} />
+
+
+      {/* Modal horário */}
+      {modalCtx && <ModalHorario ctx={modalCtx} onClose={fecharModal} onSave={salvarHorario} />}
+
+      {/* Modal preview unificado */}
+      {showPreview && (
+        <PreviewModal
+          docRef={docRef}
+          onClose={() => setShowPreview(false)}
+          title="Programação de Campo"
+        />
+      )}
+
+      <div className="pc-app">
+        <aside className="pc-painel-form">
+          <div className="pc-form-logo">
+            Programação <strong>Campo Mensal</strong>
+          </div>
+
+          {/* Cabeçalho */}
+          <div>
+            <p className="pc-secao-titulo">Informações gerais</p>
+            <div className="pc-cabecalho-inputs">
+              <div className="pc-campo">
+                <label>Mês</label>
+                <select value={mesAtual} onChange={e => trocarMes(anoAtual, +e.target.value)}>
+                  {MESES_NOMES.map((m,i) => <option key={i} value={i}>{m}</option>)}
+                </select>
+              </div>
+              <div className="pc-campo">
+                <label>Ano</label>
+                <select value={anoAtual} onChange={e => trocarMes(+e.target.value, mesAtual)}>
+                  {Array.from({ length: 8 }, (_, i) => agora.getFullYear() - 2 + i).map(a =>
+                    <option key={a} value={a}>{a}</option>
+                  )}
+                </select>
+              </div>
+              <div className="pc-campo pc-campo-full">
+                <label>Congregação</label>
+                <input type="text" placeholder="Nome da congregação"
+                  value={congreg} onChange={e => atualizarCongr(e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          {/* Calendário */}
+          <div>
+            <p className="pc-secao-titulo">Calendário do mês</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:'0.75rem' }}>
+              {semanas.map((semana, si) => {
+                const diasValidos = semana.filter(d => d !== null)
+                const de  = diasValidos[0]
+                const ate = diasValidos[diasValidos.length - 1]
+                return (
+                  <div key={si} className="pc-semana-bloco">
+                    <div className="pc-semana-header">
+                      <span>Semana {si + 1}</span>
+                      <span className="pc-semana-datas">
+                        {de  ? `${de}/${mesAtual+1}`  : ''}
+                        {de && ate ? ' — ' : ''}
+                        {ate ? `${ate}/${mesAtual+1}` : ''}
+                      </span>
+                    </div>
+                    <div className="pc-dias-grid-wrap">
+                      <div className="pc-dias-grid">
+                        {/* headers */}
+                        {DIAS_FULL.map(d => (
+                          <div key={d} className="pc-dia-col-header">{d.split('-')[0]}</div>
+                        ))}
+                        {/* células */}
+                        {semana.map((diaNum, di) => {
+                          if (diaNum === null) return <div key={di} className="pc-dia-celula pc-vazio" />
+                          const hs     = dados[diaNum] || []
+                          const dest   = !!destaques[diaNum]
+                          const obsVal = obs[diaNum] || ''
+                          return (
+                            <div key={di} className={`pc-dia-celula${dest ? ' pc-destaque' : ''}`}>
+                              <div className="pc-dia-destaque-wrap">
+                                <input type="checkbox" checked={dest}
+                                  onChange={() => toggleDestaque(diaNum)} id={`dest-${diaNum}`} />
+                                <label htmlFor={`dest-${diaNum}`}>dest.</label>
+                              </div>
+                              <span className="pc-dia-numero">{diaNum}</span>
+                              {hs.map((h, hi) => (
+                                <div key={hi} className="pc-horario-item" data-idx={hi % 5}
+                                  style={{ background: CORES_BG[hi % 5] }}>
+                                  <span className="pc-hi-horario">{h.horario}</span>
+                                  <span className="pc-hi-info">{h.local}</span>
+                                  <span className="pc-hi-info">{h.dirigente}</span>
+                                  <div className="pc-hi-acoes">
+                                    <button className="pc-hi-btn pc-hi-btn-edit"
+                                      onClick={() => abrirModal(diaNum, hi, h)}>✏ Editar</button>
+                                    <button className="pc-hi-btn pc-hi-btn-del"
+                                      onClick={() => removerHorario(diaNum, hi)}>✕</button>
+                                  </div>
+                                </div>
+                              ))}
+                              <div className="pc-dia-obs-wrap">
+                                <textarea className="pc-dia-obs-input" placeholder="Obs..."
+                                  value={obsVal}
+                                  onChange={e => atualizarObs(diaNum, e.target.value)} />
+                              </div>
+                              <button className="pc-btn-add-horario"
+                                onClick={() => abrirModal(diaNum, null, null)}>+ Horário</button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {/* Documento A4 — sempre no DOM, fora da tela, para captura */}
+      <div style={{ position:'fixed', top:0, left:'-9999px', zIndex:-1, visibility:'hidden', pointerEvents:'none' }}>
+        <div ref={docRef} id="pc-documento-exportavel">
+          <div className="pc-doc-cabecalho">
+            <div className="pc-doc-ano-mes">
+              <span className="pc-doc-ano">{anoAtual}</span>
+              <span className="pc-doc-mes">{MESES_NOMES[mesAtual]}</span>
+            </div>
+            <div className="pc-doc-porcon">
+              <h2>Programação Mensal de Campo</h2>
+              <div className="pc-doc-cong">{congreg || '—'}</div>
+            </div>
+          </div>
+          <table className="pc-doc-tabela">
+            <thead>
+              <tr>{DIAS_FULL.map(d => <th key={d}>{d}</th>)}</tr>
+            </thead>
+            <tbody>
+              {semanas.map((semana, si) => (
+                <tr key={si}>
+                  {semana.map((diaNum, di) => {
+                    if (diaNum === null) return <td key={di} className="pc-doc-td-vazio" />
+                    const hs   = dados[diaNum] || []
+                    const dest = !!destaques[diaNum]
+                    const obsV = obs[diaNum] || ''
+                    return (
+                      <td key={di} className={dest ? 'pc-doc-td-destaque' : ''}
+                        style={dest ? { background:'#fff8e1', border:'2px solid #e6a817' } : {}}>
+                        <span className={`pc-doc-dia-num${dest ? ' pc-doc-dia-num-dest' : ''}`}>{diaNum}</span>
+                        {obsV && <div className="pc-doc-obs">{obsV}</div>}
+                        {hs.map((h, hi) => (
+                          <div key={hi} className="pc-doc-horario-entry"
+                            data-idx={hi % 5} style={{ background: CORES_BG[hi % 5] }}>
+                            <span className="pc-dh-label">Horário:</span>
+                            <span className="pc-dh-val">{h.horario}</span>
+                            <span className="pc-dh-label">Local:</span>
+                            <span className="pc-dh-val">{h.local}</span>
+                            <span className="pc-dh-label">Dirigente:</span>
+                            <span className="pc-dh-val">{h.dirigente}</span>
+                          </div>
+                        ))}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  )
+}
+
+/* Modal de preview inline — move o docRef para dentro */
+function ModalPreviewInline({ docRef, onClose }) {
+  const scrollRef    = useRef()
+  const containerRef = useRef()
+
+  useEffect(() => {
+    const el  = docRef.current
+    const box = containerRef.current
+    if (!el || !box) return
+
+    el.style.visibility = 'visible'
+    el.style.position   = 'relative'
+    box.appendChild(el)
+
+    function escalar() {
+      const sc  = scrollRef.current
+      if (!sc) return
+      const dispW = sc.clientWidth  - 32
+      const dispH = sc.clientHeight - 16
+      const scale = Math.min(dispW / 794, dispH / 1123, 1)
+      el.style.transform       = `scale(${scale})`
+      el.style.transformOrigin = 'top left'
+      box.style.width  = (794 * scale) + 'px'
+      box.style.height = (1123 * scale) + 'px'
+    }
+    escalar()
+    window.addEventListener('resize', escalar)
+
+    return () => {
+      window.removeEventListener('resize', escalar)
+      // Devolve o doc ao wrapper oculto
+      const wrapper = document.querySelector('[data-pc-wrapper]')
+      if (wrapper) {
+        el.style.visibility = 'hidden'
+        el.style.position   = 'relative'
+        el.style.transform  = 'none'
+        wrapper.appendChild(el)
+      }
+    }
+  }, [docRef])
+
+  return (
+    <div className="pc-modal-preview-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="pc-modal-preview-box">
+        <div className="pc-modal-preview-header">
+          <span className="pc-modal-preview-label">Pré-visualização — A4</span>
+          <button className="pc-modal-preview-fechar" onClick={onClose}>✕</button>
+        </div>
+        <div className="pc-modal-preview-scroll" ref={scrollRef}>
+          <div ref={containerRef} style={{ position:'relative', overflow:'hidden', flexShrink:0 }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const PC_STYLES = `
+  .pc-app {
+    padding-top: 58px;
+    min-height: 100%;
+    background: #f5f0eb;
+  }
+  .pc-painel-form {
+    background: #fff;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .pc-form-logo { font-family:'EB Garamond',serif; font-size:1.1rem; font-style:italic; color:#8b5e3c; letter-spacing:.03em; border-bottom:1px solid #d5c8c0; padding-bottom:1rem; }
+  .pc-form-logo strong { display:block; font-size:1.6rem; font-style:normal; font-weight:600; color:#1c1410; letter-spacing:-.02em; }
+  .pc-secao-titulo { font-size:.7rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#7a6a62; margin-bottom:.6rem; }
+  .pc-cabecalho-inputs { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+  .pc-campo-full { grid-column:1/-1; }
+  .pc-campo { display:flex; flex-direction:column; gap:.3rem; }
+  .pc-campo label { font-size:.72rem; font-weight:500; letter-spacing:.05em; text-transform:uppercase; color:#7a6a62; }
+  .pc-campo input, .pc-campo select { background:#faf7f5; border:1px solid #d5c8c0; border-radius:7px; padding:.6rem .75rem; font-size:.95rem; color:#1c1410; width:100%; transition:border-color .15s; box-sizing:border-box; }
+  .pc-campo input:focus, .pc-campo select:focus { outline:none; border-color:#8b5e3c; box-shadow:0 0 0 3px rgba(139,94,60,.12); }
+  /* semana bloco */
+  .pc-semana-bloco { background:#faf7f5; border:1px solid #d5c8c0; border-radius:10px; }
+  .pc-semana-header { display:flex; align-items:center; justify-content:space-between; padding:.5rem 1rem; background:#3b2d25; color:#f5f0eb; font-size:.95rem; }
+  .pc-semana-datas { font-size:.72rem; opacity:.7; font-style:italic; }
+  .pc-dias-grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .pc-dias-grid { display:grid; grid-template-columns:repeat(7,minmax(90px,1fr)); min-width:630px; }
+  .pc-dia-col-header { font-size:.7rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#7a6a62; text-align:center; padding:.45rem .2rem; border-bottom:1px solid #d5c8c0; border-right:1px solid #d5c8c0; background:#f0eae5; }
+  .pc-dia-col-header:last-child { border-right:none; }
+  .pc-dia-celula { border-right:1px solid #d5c8c0; border-bottom:1px solid #d5c8c0; min-height:110px; padding:.35rem; display:flex; flex-direction:column; gap:.25rem; position:relative; overflow:visible; }
+  .pc-dia-celula:nth-child(7n) { border-right:none; }
+  .pc-dia-celula.pc-destaque { background:#fff8e1; box-shadow:inset 0 0 0 2px #e6a817; }
+  .pc-dia-celula.pc-destaque .pc-dia-numero { color:#b56f00; }
+  .pc-dia-celula.pc-vazio { background:#f0ebe6; pointer-events:none; }
+  .pc-dia-destaque-wrap { position:absolute; top:4px; right:4px; display:flex; align-items:center; gap:3px; }
+  .pc-dia-destaque-wrap label { font-size:.6rem; color:#7a6a62; cursor:pointer; letter-spacing:.04em; text-transform:uppercase; }
+  .pc-dia-destaque-wrap input[type=checkbox] { accent-color:#e6a817; width:13px; height:13px; cursor:pointer; }
+  .pc-dia-numero { font-size:1.3rem; font-weight:600; color:#8b5e3c; line-height:1; padding:1px 2px; }
+  .pc-horario-item { border:1px solid #d5c8c0; border-radius:5px; padding:.3rem .4rem; font-size:.78rem; line-height:1.5; }
+  .pc-hi-horario { font-weight:700; color:#3b2d25; display:block; font-size:.82rem; }
+  .pc-hi-info { color:#7a6a62; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pc-hi-acoes { display:flex; gap:6px; margin-top:4px; }
+  .pc-hi-btn { background:transparent; border:none; font-size:.75rem; cursor:pointer; padding:5px 7px; min-height:34px; text-decoration:underline; display:flex; align-items:center; }
+  .pc-hi-btn-edit { color:#8b5e3c; }
+  .pc-hi-btn-del  { color:#8b3a3a; }
+  .pc-btn-add-horario { background:transparent; border:1px dashed #d5c8c0; border-radius:6px; cursor:pointer; color:#7a6a62; font-size:.8rem; padding:.5rem 0; width:100%; margin-top:auto; min-height:40px; transition:all .15s; }
+  .pc-btn-add-horario:hover { border-color:#8b5e3c; color:#8b5e3c; }
+  .pc-dia-obs-wrap { margin-top:2px; }
+  .pc-dia-obs-input { width:100%; font-size:.72rem; color:#1c1410; background:rgba(255,255,255,.7); border:1px dashed #d5c8c0; border-radius:4px; padding:3px 5px; resize:none; outline:none; transition:border-color .15s; line-height:1.4; min-height:28px; box-sizing:border-box; }
+  .pc-dia-obs-input:focus { border-color:#8b5e3c; background:#fff; }
+  /* Modal horário */
+  .pc-modal-overlay { display:flex; position:fixed; inset:0; z-index:1000; background:rgba(28,20,16,.55); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
+  .pc-modal { background:#fff; border-radius:14px; padding:2rem; width:min(400px,92vw); box-shadow:0 16px 40px rgba(28,20,16,.3); max-height:90vh; overflow-y:auto; }
+  .pc-modal h3 { font-size:1.3rem; color:#1c1410; margin-bottom:.3rem; }
+  .pc-modal-sub { font-size:.78rem; color:#7a6a62; margin-bottom:1.2rem; }
+  .pc-modal .pc-campo { margin-bottom:.85rem; }
+  .pc-modal-acoes { display:flex; gap:.75rem; margin-top:1.2rem; }
+  .pc-btn-aplicar  { flex:1; padding:.7rem; border:none; border-radius:7px; font-size:.9rem; font-weight:500; cursor:pointer; background:#4a6b4a; color:#fff; }
+  .pc-btn-aplicar:hover { background:#3a5a3a; }
+  .pc-btn-cancelar { flex:1; padding:.7rem; border:none; border-radius:7px; font-size:.9rem; font-weight:500; cursor:pointer; background:#8b3a3a; color:#fff; }
+  .pc-btn-cancelar:hover { background:#6e2c2c; }
+`
