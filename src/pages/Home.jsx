@@ -4,7 +4,7 @@ import s from './Home.module.css'
 const CARDS = [
   {
     to:    '/vida-ministerio',
-    icon:  'fa-book-bible',
+    icon:  'fa-book',
     color: '#0e097f',
     title: 'Vida e Ministério',
     desc:  'Monte a programação da reunião de meio de semana com editor completo e exportação em PDF.',
@@ -39,7 +39,7 @@ export default function Home() {
     <div className={s.page}>
       <div className={s.hero}>
         <i className="fa-solid fa-book-open" style={{ fontSize: 48, color: '#4da3ff' }} />
-        <h1 className={s.title}>Reuniões JW</h1>
+        <h1 className={s.title}>Quadro Online</h1>
         <p className={s.sub}>
           Selecione um módulo para começar a montar a programação da sua congregação.
         </p>

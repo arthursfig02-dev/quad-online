@@ -5,7 +5,7 @@ import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
 import PreviewModal from '../components/ui/PreviewModal'
 
-import oradorImg from '../assets/images/orador.placeholder.svg'
+import oradorImg from '../assets/images/orador.png'
 
 const LS_KEY = 'reu-publica-dados'
 

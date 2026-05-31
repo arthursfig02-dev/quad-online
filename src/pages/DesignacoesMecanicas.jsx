@@ -295,7 +295,7 @@ const DM_STYLES = `
     align-items: flex-start;
     gap: 20px;
     padding: 10px 16px 80px;
-    margin-top: 58px;
+    margin-top: 20px;
     background: #f4f2ee;
     min-height: 100%;
   }
@@ -352,5 +352,7 @@ const DM_STYLES = `
   .dm-cat-label { background:#e8eef7!important; color:#162c54; font-weight:700; font-size:12pt; text-align:right; white-space:nowrap; min-width:0; width:1%; padding-right:8px!important; }
   @media (min-width:1200px) {
     .dm-previsu { display:block; }
+    .dm-layout {margin-top:50px;}
+
   }
 `
