@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Toast from '../components/ui/Toast'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
-import PreviewModal from '../components/ui/PreviewModal'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
@@ -116,7 +115,7 @@ export default function ProgramacaoCampo() {
   const [destaques, setDestaques] = useState({})
   const [obs,       setObs]       = useState({})
   const [modalCtx,  setModalCtx]  = useState(null)
-  const [showPreview, setShowPreview]  = useState(false)
+  const [showPrev,  setShowPrev]  = useState(false)
   const [overlay,   setOverlay]   = useState({ visible: false, msg: '' })
 
   function chaveLS() { return `programacao-campo:${anoAtual}-${mesAtual}` }
@@ -249,26 +248,42 @@ export default function ProgramacaoCampo() {
   }
 
   /* ── salvar/carregar arquivo JSON ── */
-  /* ── Salvar / Carregar via localStorage ── */
-  function salvarDados() {
-    salvarLS(dados, destaques, obs, congreg)
-    toastRef.current?.show('✔ Dados salvos!', 'success')
+  const fileInputRef = useRef()
+  function salvarArquivo() {
+    const estado = { anoAtual, mesAtual, congregacao: congreg, dados, diasDestacados: destaques, observacoes: obs }
+    const blob = new Blob([JSON.stringify(estado, null, 2)], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href = url; a.download = `programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.json`
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+    toastRef.current?.show('✔ Arquivo salvo!', 'success')
   }
-  function carregarDados() {
-    const d = carregarLS(anoAtual, mesAtual)
-    setDados(d.dados || {})
-    setDestaques(d.diasDestacados || {})
-    setObs(d.observacoes || {})
-    setCongr(d.congregacao || '')
-    toastRef.current?.show('📂 Dados carregados!', 'info')
+  function lerArquivo(e) {
+    const file = e.target.files[0]; if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      try {
+        const est = JSON.parse(ev.target.result)
+        if (est.anoAtual  !== undefined) setAnoAtual(est.anoAtual)
+        if (est.mesAtual  !== undefined) setMesAtual(est.mesAtual)
+        setDados(est.dados || {})
+        setDestaques(est.diasDestacados || {})
+        setObs(est.observacoes || {})
+        setCongr(est.congregacao || '')
+        toastRef.current?.show('📂 Arquivo carregado!', 'info')
+      } catch { toastRef.current?.show('Erro ao carregar arquivo.', 'error') }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
   }
 
   const semanas = gerarSemanas(anoAtual, mesAtual)
 
   const actions = [
-    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: salvarDados   },
-    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: carregarDados },
-    { id: 'preview',  icon: 'fa-eye',              label: 'Pré-Visualizar', onClick: () => setShowPreview(true) },
+    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: salvarArquivo },
+    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: () => fileInputRef.current?.click() },
+    { id: 'preview',  icon: 'fa-eye',              label: 'Pré-Visualizar', onClick: () => setShowPrev(true) },
     { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: imprimirDoc  },
     { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: exportarPDF  },
     { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: exportarIMG  },
@@ -281,18 +296,13 @@ export default function ProgramacaoCampo() {
       <Toast ref={toastRef} />
       <PageActionBar actions={actions} />
 
+      <input type="file" ref={fileInputRef} accept=".json" style={{ display:'none' }} onChange={lerArquivo} />
 
       {/* Modal horário */}
       {modalCtx && <ModalHorario ctx={modalCtx} onClose={fecharModal} onSave={salvarHorario} />}
 
-      {/* Modal preview unificado */}
-      {showPreview && (
-        <PreviewModal
-          docRef={docRef}
-          onClose={() => setShowPreview(false)}
-          title="Programação de Campo"
-        />
-      )}
+      {/* Modal preview */}
+      {showPrev && <ModalPreviewInline docRef={docRef} onClose={() => setShowPrev(false)} />}
 
       <div className="pc-app">
         <aside className="pc-painel-form">
@@ -573,4 +583,32 @@ const PC_STYLES = `
   .pc-btn-aplicar:hover { background:#3a5a3a; }
   .pc-btn-cancelar { flex:1; padding:.7rem; border:none; border-radius:7px; font-size:.9rem; font-weight:500; cursor:pointer; background:#8b3a3a; color:#fff; }
   .pc-btn-cancelar:hover { background:#6e2c2c; }
+  /* Modal preview */
+  .pc-modal-preview-overlay { display:flex; position:fixed; inset:0; z-index:2000; background:rgba(28,20,16,.72); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+  .pc-modal-preview-box { background:#ddd8d2; border-radius:14px; padding:1.25rem; width:min(860px,96vw); max-height:96vh; display:flex; flex-direction:column; gap:.75rem; box-shadow:0 16px 48px rgba(28,20,16,.35); }
+  .pc-modal-preview-header { display:flex; align-items:center; justify-content:space-between; }
+  .pc-modal-preview-label { font-size:.68rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#7a6e68; }
+  .pc-modal-preview-fechar { background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:#7a6e68; padding:4px 8px; border-radius:6px; }
+  .pc-modal-preview-fechar:hover { background:rgba(0,0,0,.1); }
+  .pc-modal-preview-scroll { overflow-y:auto; display:flex; align-items:flex-start; justify-content:center; }
+  /* Documento A4 */
+  #pc-documento-exportavel { width:794px; height:1123px; background:#fff; padding:18px 22px; font-family:Arial,sans-serif; overflow:hidden; display:flex; flex-direction:column; position:relative; flex-shrink:0; }
+  .pc-doc-cabecalho { display:flex; justify-content:space-around; align-items:center; padding:6px 8px; border-bottom:2px solid black; background:#cbb3a6; margin-bottom:8px; flex-shrink:0; }
+  .pc-doc-ano-mes { display:flex; flex-direction:column; align-items:center; }
+  .pc-doc-ano { font-size:22px; font-weight:bold; display:block; }
+  .pc-doc-mes { font-size:14px; border-bottom:2px solid black; padding:0 4px; display:block; }
+  .pc-doc-porcon { display:flex; flex-direction:column; align-items:center; }
+  .pc-doc-porcon h2 { font-size:13px; font-weight:bold; }
+  .pc-doc-cong { font-size:12px; border:1px solid #888; padding:2px 8px; background:#f9f5f2; box-shadow:1px 1px 3px rgba(0,0,0,.15); margin-top:2px; }
+  .pc-doc-tabela { width:100%; border-collapse:collapse; table-layout:fixed; flex:1; }
+  .pc-doc-tabela th { border:1px solid black; padding:4px 3px; text-align:center; background:#cbb3a6; font-weight:bold; font-size:11px; }
+  .pc-doc-tabela td { border:1px solid black; padding:3px; vertical-align:top; font-size:10px; word-wrap:break-word; }
+  .pc-doc-td-vazio { background:repeating-linear-gradient(-45deg,#f5f0eb,#f5f0eb 3px,#ede6df 3px,#ede6df 4px)!important; }
+  .pc-doc-dia-num { font-size:13px; font-weight:bold; color:#8b5e3c; display:block; margin-bottom:2px; }
+  .pc-doc-dia-num-dest { color:#b56f00!important; }
+  .pc-doc-obs { font-size:9px; font-style:italic; color:#555; background:#fffde7; border-left:2px solid #e6a817; padding:2px 4px; margin-bottom:3px; line-height:1.4; word-break:break-word; }
+  .pc-doc-horario-entry { border-top:1px dashed #ccc; padding:2px 0; }
+  .pc-doc-horario-entry:first-child { border-top:none; }
+  .pc-dh-label { font-size:9px; color:#888; display:block; }
+  .pc-dh-val   { font-size:11px; color:#111; font-weight:bold; display:block; line-height:1.3; }
 `
