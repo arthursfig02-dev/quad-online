@@ -7,17 +7,17 @@ import { useExportTheme } from '../hooks/useExportTheme'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
-const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-const DIAS_FULL   = ['Segunda-Feira','Terça-Feira','Quarta-Feira','Quinta-Feira','Sexta-Feira','Sábado','Domingo']
-const CORES_BG    = ['#fffbe6','#ffefc0','#ffd780','#ffc14d','#f5a623']
+const MESES_NOMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+const DIAS_FULL = ['Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado', 'Domingo']
+const CORES_BG = ['#fffbe6', '#ffefc0', '#ffd780', '#ffc14d', '#f5a623']
 
 function diaSemanaIdx(jsDay) { return (jsDay + 6) % 7 }
 
 function gerarSemanas(ano, mes) {
-  const totalDias   = new Date(ano, mes + 1, 0).getDate()
+  const totalDias = new Date(ano, mes + 1, 0).getDate()
   const primeiroDia = new Date(ano, mes, 1).getDay()
-  const offset      = diaSemanaIdx(primeiroDia)
+  const offset = diaSemanaIdx(primeiroDia)
   const grade = []
   for (let i = 0; i < offset; i++) grade.push(null)
   for (let d = 1; d <= totalDias; d++) grade.push(d)
@@ -29,13 +29,13 @@ function gerarSemanas(ano, mes) {
 
 /* ── Modal de horário ── */
 function ModalHorario({ ctx, onClose, onSave }) {
-  const [horario,   setHorario]   = useState(ctx?.dado?.horario  || '')
-  const [local,     setLocal]     = useState(ctx?.dado?.local     || '')
+  const [horario, setHorario] = useState(ctx?.dado?.horario || '')
+  const [local, setLocal] = useState(ctx?.dado?.local || '')
   const [dirigente, setDirigente] = useState(ctx?.dado?.dirigente || '')
 
   useEffect(() => {
-    setHorario(ctx?.dado?.horario  || '')
-    setLocal(ctx?.dado?.local     || '')
+    setHorario(ctx?.dado?.horario || '')
+    setLocal(ctx?.dado?.local || '')
     setDirigente(ctx?.dado?.dirigente || '')
   }, [ctx])
 
@@ -68,21 +68,21 @@ function ModalHorario({ ctx, onClose, onSave }) {
    PÁGINA
    ════════════════════════════════════════════════════════ */
 export default function ProgramacaoCampo() {
-  const toastRef   = useRef()
-  const docRef     = useRef()
+  const toastRef = useRef()
+  const docRef = useRef()
   const wrapperRef = useRef()
   const { applyTheme, removeTheme } = useExportTheme('pc')   // ref para o wrapper oculto — garante devolução correta
 
   const agora = new Date()
-  const [anoAtual,  setAnoAtual]  = useState(agora.getFullYear())
-  const [mesAtual,  setMesAtual]  = useState(agora.getMonth())
-  const [congreg,   setCongr]     = useState('')
-  const [dados,     setDados]     = useState({})
+  const [anoAtual, setAnoAtual] = useState(agora.getFullYear())
+  const [mesAtual, setMesAtual] = useState(agora.getMonth())
+  const [congreg, setCongr] = useState('')
+  const [dados, setDados] = useState({})
   const [destaques, setDestaques] = useState({})
-  const [obs,       setObs]       = useState({})
-  const [modalCtx,  setModalCtx]  = useState(null)
-  const [showPrev,  setShowPrev]  = useState(false)
-  const [overlay,   setOverlay]   = useState({ visible: false, msg: '' })
+  const [obs, setObs] = useState({})
+  const [modalCtx, setModalCtx] = useState(null)
+  const [showPrev, setShowPrev] = useState(false)
+  const [overlay, setOverlay] = useState({ visible: false, msg: '' })
 
   /* ── localStorage ── */
   function chaveLS(ano = anoAtual, mes = mesAtual) {
@@ -96,9 +96,9 @@ export default function ProgramacaoCampo() {
   function carregarLS(ano = anoAtual, mes = mesAtual) {
     try {
       const raw = localStorage.getItem(chaveLS(ano, mes))
-      if (!raw) return { dados:{}, diasDestacados:{}, observacoes:{}, congregacao:'' }
+      if (!raw) return { dados: {}, diasDestacados: {}, observacoes: {}, congregacao: '' }
       return JSON.parse(raw)
-    } catch { return { dados:{}, diasDestacados:{}, observacoes:{}, congregacao:'' } }
+    } catch { return { dados: {}, diasDestacados: {}, observacoes: {}, congregacao: '' } }
   }
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export default function ProgramacaoCampo() {
     setDestaques(d.diasDestacados || {})
     setObs(d.observacoes || {})
     setCongr(d.congregacao || '')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anoAtual, mesAtual])
 
   /* ── troca mês ── */
@@ -123,7 +123,7 @@ export default function ProgramacaoCampo() {
 
   function salvarHorario(novoDado) {
     setDados(prev => {
-      const next  = { ...prev }
+      const next = { ...prev }
       const lista = [...(next[modalCtx.diaNum] || [])]
       if (modalCtx.hi === null) lista.push(novoDado)
       else lista[modalCtx.hi] = novoDado
@@ -135,7 +135,7 @@ export default function ProgramacaoCampo() {
   }
   function removerHorario(diaNum, hi) {
     setDados(prev => {
-      const next  = { ...prev }
+      const next = { ...prev }
       const lista = [...(next[diaNum] || [])]
       lista.splice(hi, 1)
       next[diaNum] = lista
@@ -193,7 +193,7 @@ export default function ProgramacaoCampo() {
 
     // Revela o elemento mantendo-o no wrapper original
     el.style.visibility = 'visible'
-    el.style.position   = 'relative'
+    el.style.position = 'relative'
 
     // Injeta tema antes da captura
     applyTheme(el)
@@ -219,7 +219,7 @@ export default function ProgramacaoCampo() {
       // Remove tema e esconde de volta
       removeTheme(el)
       el.style.visibility = 'hidden'
-      el.style.position   = 'absolute'
+      el.style.position = 'absolute'
     }
 
     return canvas
@@ -230,7 +230,7 @@ export default function ProgramacaoCampo() {
     setOverlay({ visible: true, msg: 'Gerando PDF…' })
     try {
       const canvas = await capturarDoc()
-      const pdf    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297)
 
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
@@ -257,9 +257,9 @@ export default function ProgramacaoCampo() {
   async function exportarIMG() {
     setOverlay({ visible: true, msg: 'Gerando imagem…' })
     try {
-      const canvas   = await capturarDoc()
+      const canvas = await capturarDoc()
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-      const blob     = await new Promise((res, rej) =>
+      const blob = await new Promise((res, rej) =>
         canvas.toBlob(b => b ? res(b) : rej(new Error('toBlob falhou')), 'image/jpeg', 0.95)
       )
       const name = `programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.jpg`
@@ -287,7 +287,7 @@ export default function ProgramacaoCampo() {
     try {
       const canvas = await capturarDoc()
       const imgSrc = canvas.toDataURL('image/jpeg', 0.95)
-      const win    = window.open('', '_blank')
+      const win = window.open('', '_blank')
       if (!win) { toastRef.current?.show('Popup bloqueado.', 'warning'); return }
       win.document.write(`<!DOCTYPE html><html><head><title>Programação de Campo</title>
         <style>@page{margin:0;size:A4}body{margin:0;padding:0}img{width:100%;height:auto;display:block}</style>
@@ -300,12 +300,12 @@ export default function ProgramacaoCampo() {
   const semanas = gerarSemanas(anoAtual, mesAtual)
 
   const actions = [
-    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: salvarDados   },
-    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: carregarDados },
-    { id: 'preview',  icon: 'fa-eye',              label: 'Pré-Visualizar', onClick: () => setShowPrev(true) },
-    { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: imprimirDoc   },
-    { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: exportarPDF   },
-    { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: exportarIMG   },
+    { id: 'salvar', icon: 'fa-cloud-arrow-up', label: 'Salvar', onClick: salvarDados },
+    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar', onClick: carregarDados },
+    { id: 'preview', icon: 'fa-eye', label: 'Pré-Visualizar', onClick: () => setShowPrev(true) },
+    { id: 'imprimir', icon: 'fa-print', label: 'Imprimir', onClick: imprimirDoc },
+    { id: 'pdf', icon: 'fa-file-pdf', label: 'Baixar PDF', onClick: exportarPDF },
+    { id: 'foto', icon: 'fa-image', label: 'Baixar Foto', onClick: exportarIMG },
   ]
 
   return (
@@ -362,19 +362,19 @@ export default function ProgramacaoCampo() {
 
           <div>
             <p className="pc-secao-titulo">Calendário do mês</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {semanas.map((semana, si) => {
                 const diasValidos = semana.filter(d => d !== null)
-                const de  = diasValidos[0]
+                const de = diasValidos[0]
                 const ate = diasValidos[diasValidos.length - 1]
                 return (
                   <div key={si} className="pc-semana-bloco">
                     <div className="pc-semana-header">
                       <span>Semana {si + 1}</span>
                       <span className="pc-semana-datas">
-                        {de ? `${de}/${mesAtual+1}` : ''}
+                        {de ? `${de}/${mesAtual + 1}` : ''}
                         {de && ate ? ' — ' : ''}
-                        {ate ? `${ate}/${mesAtual+1}` : ''}
+                        {ate ? `${ate}/${mesAtual + 1}` : ''}
                       </span>
                     </div>
                     <div className="pc-dias-grid-wrap">
@@ -384,8 +384,8 @@ export default function ProgramacaoCampo() {
                         ))}
                         {semana.map((diaNum, di) => {
                           if (diaNum === null) return <div key={di} className="pc-dia-celula pc-vazio" />
-                          const hs     = dados[diaNum] || []
-                          const dest   = !!destaques[diaNum]
+                          const hs = dados[diaNum] || []
+                          const dest = !!destaques[diaNum]
                           const obsVal = obs[diaNum] || ''
                           return (
                             <div key={di} className={`pc-dia-celula${dest ? ' pc-destaque' : ''}`}>
@@ -462,12 +462,12 @@ export default function ProgramacaoCampo() {
                 <tr key={si}>
                   {semana.map((diaNum, di) => {
                     if (diaNum === null) return <td key={di} className="pc-doc-td-vazio" />
-                    const hs   = dados[diaNum] || []
+                    const hs = dados[diaNum] || []
                     const dest = !!destaques[diaNum]
                     const obsV = obs[diaNum] || ''
                     return (
                       <td key={di}
-                        style={dest ? { background:'#fff8e1', border:'2px solid #e6a817' } : {}}>
+                        style={dest ? { background: '#fff8e1', border: '2px solid #e6a817' } : {}}>
                         <span className={`pc-doc-dia-num${dest ? ' pc-doc-dia-num-dest' : ''}`}>{diaNum}</span>
                         {obsV && <div className="pc-doc-obs">{obsV}</div>}
                         {hs.map((h, hi) => (
@@ -496,7 +496,7 @@ export default function ProgramacaoCampo() {
 
 function _blobDownload(blob, name) {
   const url = URL.createObjectURL(blob)
-  const a   = document.createElement('a')
+  const a = document.createElement('a')
   a.href = url; a.download = name
   document.body.appendChild(a); a.click(); document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 10000)
