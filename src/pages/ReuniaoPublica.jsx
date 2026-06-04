@@ -3,6 +3,8 @@ import Toast from '../components/ui/Toast'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
+import { useExportTheme } from '../hooks/useExportTheme'
+import { useThemeLive } from '../hooks/useThemeLive'
 import PreviewModal from '../components/ui/PreviewModal'
 
 import oradorImg from '../assets/images/orador.png'
@@ -39,6 +41,12 @@ export default function ReuniaoPublica() {
   const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
   const [showPreview, setShowPreview] = useState(false)
 
+  /* ── Tema de exportação ─────────────────────────────── */
+  const { applyTheme, removeTheme } = useExportTheme('rp')
+
+  /* ── Tema em tempo real no previsu lateral ───────────── */
+  useThemeLive(previewRef, 'rp')
+
   /* ── Export hook ─────────────────────────────────────── */
   const filename = `Reunião-Pública-${(mes || 'sem-mes').toLowerCase().replace(/\s+/g,'-')}-${ano || 'sem-ano'}`
   const { exportPDF, exportIMG, printPreview, openPreview } = useExport(previewRef, {
@@ -46,6 +54,8 @@ export default function ReuniaoPublica() {
     onEnd:   (msg, type) => { setOverlay({ visible: false, msg: '' }); toastRef.current?.show(msg, type) },
     onError: msg => toastRef.current?.show(msg, 'error'),
     onOpenPreview: () => setShowPreview(true),
+    onBeforeCapture: applyTheme,
+    onAfterCapture: removeTheme,
     filename,
   })
 
@@ -120,6 +130,7 @@ export default function ReuniaoPublica() {
           previewRef={previewRef}
           onClose={() => setShowPreview(false)}
           title="Reunião Pública"
+          applyTheme={applyTheme}
         />
       )}
       <PageActionBar actions={actions} />

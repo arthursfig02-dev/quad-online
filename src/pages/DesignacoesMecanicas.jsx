@@ -3,6 +3,8 @@ import Toast from '../components/ui/Toast'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
+import { useExportTheme } from '../hooks/useExportTheme'
+import { useThemeLive } from '../hooks/useThemeLive'
 import PreviewModal from '../components/ui/PreviewModal'
 
 const LS_KEY = 'designacoes-mecanicas-dados'
@@ -68,12 +70,18 @@ export default function DesignacoesMecanicas() {
   const [volInputs, setVolInputs] = useState({})
 
   const filename = `designacoes-mecanicas-${(mes||'sem-mes').toLowerCase()}-${ano||'sem-ano'}`
+  const { applyTheme, removeTheme } = useExportTheme('dm')
+
+  /* ── Tema em tempo real no previsu lateral ───────────── */
+  useThemeLive(previewRef, 'dm')
 
   const { exportPDF, exportIMG, printPreview, openPreview } = useExport(previewRef, {
     onStart: msg => setOverlay({ visible: true, msg }),
     onEnd:   (msg, type) => { setOverlay({ visible: false, msg: '' }); toastRef.current?.show(msg, type) },
     onError: msg => toastRef.current?.show(msg, 'error'),
     onOpenPreview: () => setShowPreview(true),
+    onBeforeCapture: applyTheme,
+    onAfterCapture:  removeTheme,
     filename,
   })
 
@@ -159,6 +167,7 @@ export default function DesignacoesMecanicas() {
           previewRef={previewRef}
           onClose={() => setShowPreview(false)}
           title="Designações Mecânicas"
+          applyTheme={applyTheme}
         />
       )}
       <PageActionBar actions={actions} />

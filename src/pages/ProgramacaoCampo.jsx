@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Toast from '../components/ui/Toast'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
+import PreviewModal from '../components/ui/PreviewModal'
+import { useExportTheme } from '../hooks/useExportTheme'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
@@ -27,14 +29,14 @@ function gerarSemanas(ano, mes) {
 
 /* ── Modal de horário ── */
 function ModalHorario({ ctx, onClose, onSave }) {
-  const [horario,   setHorario]   = useState(ctx?.dado?.horario   || '')
-  const [local,     setLocal]     = useState(ctx?.dado?.local      || '')
-  const [dirigente, setDirigente] = useState(ctx?.dado?.dirigente  || '')
+  const [horario,   setHorario]   = useState(ctx?.dado?.horario  || '')
+  const [local,     setLocal]     = useState(ctx?.dado?.local     || '')
+  const [dirigente, setDirigente] = useState(ctx?.dado?.dirigente || '')
 
   useEffect(() => {
-    setHorario(ctx?.dado?.horario   || '')
-    setLocal(ctx?.dado?.local      || '')
-    setDirigente(ctx?.dado?.dirigente  || '')
+    setHorario(ctx?.dado?.horario  || '')
+    setLocal(ctx?.dado?.local     || '')
+    setDirigente(ctx?.dado?.dirigente || '')
   }, [ctx])
 
   if (!ctx) return null
@@ -62,50 +64,14 @@ function ModalHorario({ ctx, onClose, onSave }) {
   )
 }
 
-/* ── Modal de preview ── */
-function ModalPreview({ docRef, onClose }) {
-  const containerRef = useRef()
-
-  useEffect(() => {
-    function escalar() {
-      const c = containerRef.current
-      const el = docRef.current
-      if (!c || !el) return
-      const dispW = c.clientWidth - 32
-      const dispH = c.clientHeight - 16
-      const scale = Math.min(dispW / 794, dispH / 1123, 1)
-      el.style.transform = `scale(${scale})`
-      el.style.transformOrigin = 'top left'
-      c.style.width  = (794 * scale) + 'px'
-      c.style.height = (1123 * scale) + 'px'
-    }
-    escalar()
-    window.addEventListener('resize', escalar)
-    return () => window.removeEventListener('resize', escalar)
-  }, [docRef])
-
-  return (
-    <div className="pc-modal-preview-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="pc-modal-preview-box">
-        <div className="pc-modal-preview-header">
-          <span className="pc-modal-preview-label">Pré-visualização — A4</span>
-          <button className="pc-modal-preview-fechar" onClick={onClose}>✕</button>
-        </div>
-        <div className="pc-modal-preview-scroll" ref={containerRef}>
-          {/* o documento A4 é renderizado aqui via portal de ref */}
-          <div id="pc-preview-host" style={{ position:'relative', overflow:'hidden', flexShrink:0 }} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /* ════════════════════════════════════════════════════════
    PÁGINA
    ════════════════════════════════════════════════════════ */
 export default function ProgramacaoCampo() {
   const toastRef   = useRef()
-  const docRef     = useRef()   // ref para #documento-exportavel
+  const docRef     = useRef()
+  const wrapperRef = useRef()
+  const { applyTheme, removeTheme } = useExportTheme('pc')   // ref para o wrapper oculto — garante devolução correta
 
   const agora = new Date()
   const [anoAtual,  setAnoAtual]  = useState(agora.getFullYear())
@@ -118,15 +84,18 @@ export default function ProgramacaoCampo() {
   const [showPrev,  setShowPrev]  = useState(false)
   const [overlay,   setOverlay]   = useState({ visible: false, msg: '' })
 
-  function chaveLS() { return `programacao-campo:${anoAtual}-${mesAtual}` }
-
-  /* ── LS ── */
+  /* ── localStorage ── */
+  function chaveLS(ano = anoAtual, mes = mesAtual) {
+    return `programacao-campo:${ano}-${mes}`
+  }
   function salvarLS(d = dados, dest = destaques, o = obs, cong = congreg) {
-    localStorage.setItem(chaveLS(), JSON.stringify({ dados: d, diasDestacados: dest, observacoes: o, congregacao: cong }))
+    localStorage.setItem(chaveLS(), JSON.stringify({
+      dados: d, diasDestacados: dest, observacoes: o, congregacao: cong,
+    }))
   }
   function carregarLS(ano = anoAtual, mes = mesAtual) {
     try {
-      const raw = localStorage.getItem(`programacao-campo:${ano}-${mes}`)
+      const raw = localStorage.getItem(chaveLS(ano, mes))
       if (!raw) return { dados:{}, diasDestacados:{}, observacoes:{}, congregacao:'' }
       return JSON.parse(raw)
     } catch { return { dados:{}, diasDestacados:{}, observacoes:{}, congregacao:'' } }
@@ -143,19 +112,18 @@ export default function ProgramacaoCampo() {
 
   /* ── troca mês ── */
   function trocarMes(novoAno, novoMes) {
-    setAnoAtual(novoAno); setMesAtual(novoMes)
+    setAnoAtual(novoAno)
+    setMesAtual(novoMes)
     setDados({}); setDestaques({}); setObs({}); setCongr('')
   }
 
   /* ── horários ── */
-  function abrirModal(diaNum, hi, dado) {
-    setModalCtx({ diaNum, hi, dado })
-  }
+  function abrirModal(diaNum, hi, dado) { setModalCtx({ diaNum, hi, dado }) }
   function fecharModal() { setModalCtx(null) }
+
   function salvarHorario(novoDado) {
     setDados(prev => {
-      const next = { ...prev }
-      if (!next[modalCtx.diaNum]) next[modalCtx.diaNum] = []
+      const next  = { ...prev }
       const lista = [...(next[modalCtx.diaNum] || [])]
       if (modalCtx.hi === null) lista.push(novoDado)
       else lista[modalCtx.hi] = novoDado
@@ -167,7 +135,7 @@ export default function ProgramacaoCampo() {
   }
   function removerHorario(diaNum, hi) {
     setDados(prev => {
-      const next = { ...prev }
+      const next  = { ...prev }
       const lista = [...(next[diaNum] || [])]
       lista.splice(hi, 1)
       next[diaNum] = lista
@@ -194,99 +162,150 @@ export default function ProgramacaoCampo() {
     salvarLS(dados, destaques, obs, val)
   }
 
-  /* ── captura do documento A4 ── */
+  /* ── Salvar / Carregar explícitos ── */
+  function salvarDados() {
+    salvarLS(dados, destaques, obs, congreg)
+    toastRef.current?.show('✔ Dados salvos!', 'success')
+  }
+  function carregarDados() {
+    const d = carregarLS(anoAtual, mesAtual)
+    setDados(d.dados || {})
+    setDestaques(d.diasDestacados || {})
+    setObs(d.observacoes || {})
+    setCongr(d.congregacao || '')
+    toastRef.current?.show('📂 Dados carregados!', 'info')
+  }
+
+  /* ── Captura do documento A4 ───────────────────────────────────────
+   *
+   * CORREÇÕES aplicadas:
+   * 1. Removido windowWidth/windowHeight — causavam inconsistência de layout
+   *    em mobile porque o html2canvas resolvia media queries com viewport
+   *    falsa diferente do container real.
+   * 2. O elemento é revelado no wrapper original (não movido), capturado,
+   *    e escondido novamente — sem risco de perder a referência do nó.
+   * 3. Delay generoso (800ms) para garantir que o React renderizou os dados
+   *    atuais no documento antes da captura.
+   * ─────────────────────────────────────────────────────────────────── */
   const capturarDoc = useCallback(async () => {
     const el = docRef.current
     if (!el) throw new Error('Documento não encontrado')
+
+    // Revela o elemento mantendo-o no wrapper original
     el.style.visibility = 'visible'
-    await new Promise(r => requestAnimationFrame(r))
-    const canvas = await html2canvas(el, {
-      scale: 2, useCORS: true, width: 794, height: 1123,
-      windowWidth: 794, windowHeight: 1123,
-    })
-    el.style.visibility = 'hidden'
+    el.style.position   = 'relative'
+
+    // Injeta tema antes da captura
+    applyTheme(el)
+
+    // Aguarda dois frames + delay para layout estabilizar
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+    await new Promise(r => setTimeout(r, 800))
+
+    let canvas
+    try {
+      canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+        width: 794,
+        height: 1123,
+        // SEM windowWidth/windowHeight — deixa o browser usar a viewport real
+      })
+    } finally {
+      // Remove tema e esconde de volta
+      removeTheme(el)
+      el.style.visibility = 'hidden'
+      el.style.position   = 'absolute'
+    }
+
     return canvas
   }, [])
 
-  /* ── exportações ── */
+  /* ── Exportações ── */
   async function exportarPDF() {
     setOverlay({ visible: true, msg: 'Gerando PDF…' })
     try {
       const canvas = await capturarDoc()
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pdf    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297)
-      pdf.save(`programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.pdf`)
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      if (isMobile) {
+        const blob = pdf.output('blob')
+        const file = new File([blob], `programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.pdf`, { type: 'application/pdf' })
+        let shared = false
+        if (navigator.canShare?.({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: 'Programação de Campo' }); shared = true }
+          catch { /* cancelado */ }
+        }
+        if (!shared) _blobDownload(blob, file.name)
+      } else {
+        pdf.save(`programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.pdf`)
+      }
       toastRef.current?.show('✔ PDF exportado!', 'success')
-    } catch(e) { console.error(e); toastRef.current?.show('Erro ao gerar PDF.', 'error') }
+    } catch (e) {
+      console.error(e)
+      toastRef.current?.show('Erro ao gerar PDF.', 'error')
+    }
     setOverlay({ visible: false, msg: '' })
   }
+
   async function exportarIMG() {
     setOverlay({ visible: true, msg: 'Gerando imagem…' })
     try {
-      const canvas = await capturarDoc()
-      const blob = await new Promise((res,rej) => canvas.toBlob(b => b ? res(b) : rej(), 'image/jpeg', 0.95))
-      const url  = URL.createObjectURL(blob)
-      const a    = document.createElement('a')
-      a.href = url; a.download = `programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.jpg`
-      document.body.appendChild(a); a.click(); document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 5000)
+      const canvas   = await capturarDoc()
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      const blob     = await new Promise((res, rej) =>
+        canvas.toBlob(b => b ? res(b) : rej(new Error('toBlob falhou')), 'image/jpeg', 0.95)
+      )
+      const name = `programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.jpg`
+      const file = new File([blob], name, { type: 'image/jpeg' })
+
+      if (isMobile) {
+        let shared = false
+        if (navigator.canShare?.({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: 'Programação de Campo' }); shared = true }
+          catch { /* cancelado */ }
+        }
+        if (!shared) _blobDownload(blob, name)
+      } else {
+        _blobDownload(blob, name)
+      }
       toastRef.current?.show('✔ Imagem exportada!', 'success')
-    } catch(e) { console.error(e); toastRef.current?.show('Erro ao gerar imagem.', 'error') }
+    } catch (e) {
+      console.error(e)
+      toastRef.current?.show('Erro ao gerar imagem.', 'error')
+    }
     setOverlay({ visible: false, msg: '' })
   }
+
   async function imprimirDoc() {
     try {
       const canvas = await capturarDoc()
       const imgSrc = canvas.toDataURL('image/jpeg', 0.95)
-      const win = window.open('', '_blank')
+      const win    = window.open('', '_blank')
+      if (!win) { toastRef.current?.show('Popup bloqueado.', 'warning'); return }
       win.document.write(`<!DOCTYPE html><html><head><title>Programação de Campo</title>
         <style>@page{margin:0;size:A4}body{margin:0;padding:0}img{width:100%;height:auto;display:block}</style>
         </head><body><img src="${imgSrc}" />
         <script>window.onload=function(){window.print()}<\/script></body></html>`)
       win.document.close()
-    } catch(e) { toastRef.current?.show('Erro ao imprimir.', 'error') }
-  }
-
-  /* ── salvar/carregar arquivo JSON ── */
-  const fileInputRef = useRef()
-  function salvarArquivo() {
-    const estado = { anoAtual, mesAtual, congregacao: congreg, dados, diasDestacados: destaques, observacoes: obs }
-    const blob = new Blob([JSON.stringify(estado, null, 2)], { type: 'application/json' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href = url; a.download = `programacao-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.json`
-    document.body.appendChild(a); a.click(); document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 5000)
-    toastRef.current?.show('✔ Arquivo salvo!', 'success')
-  }
-  function lerArquivo(e) {
-    const file = e.target.files[0]; if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      try {
-        const est = JSON.parse(ev.target.result)
-        if (est.anoAtual  !== undefined) setAnoAtual(est.anoAtual)
-        if (est.mesAtual  !== undefined) setMesAtual(est.mesAtual)
-        setDados(est.dados || {})
-        setDestaques(est.diasDestacados || {})
-        setObs(est.observacoes || {})
-        setCongr(est.congregacao || '')
-        toastRef.current?.show('📂 Arquivo carregado!', 'info')
-      } catch { toastRef.current?.show('Erro ao carregar arquivo.', 'error') }
-    }
-    reader.readAsText(file)
-    e.target.value = ''
+    } catch (e) { toastRef.current?.show('Erro ao imprimir.', 'error') }
   }
 
   const semanas = gerarSemanas(anoAtual, mesAtual)
 
   const actions = [
-    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: salvarArquivo },
-    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: () => fileInputRef.current?.click() },
+    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: salvarDados   },
+    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: carregarDados },
     { id: 'preview',  icon: 'fa-eye',              label: 'Pré-Visualizar', onClick: () => setShowPrev(true) },
-    { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: imprimirDoc  },
-    { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: exportarPDF  },
-    { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: exportarIMG  },
+    { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: imprimirDoc   },
+    { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: exportarPDF   },
+    { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: exportarIMG   },
   ]
 
   return (
@@ -296,13 +315,19 @@ export default function ProgramacaoCampo() {
       <Toast ref={toastRef} />
       <PageActionBar actions={actions} />
 
-      <input type="file" ref={fileInputRef} accept=".json" style={{ display:'none' }} onChange={lerArquivo} />
-
       {/* Modal horário */}
       {modalCtx && <ModalHorario ctx={modalCtx} onClose={fecharModal} onSave={salvarHorario} />}
 
-      {/* Modal preview */}
-      {showPrev && <ModalPreviewInline docRef={docRef} onClose={() => setShowPrev(false)} />}
+      {/* Preview — usa PreviewModal unificado com docRef */}
+      {showPrev && (
+        <PreviewModal
+          docRef={docRef}
+          wrapperRef={wrapperRef}
+          onClose={() => setShowPrev(false)}
+          title="Programação de Campo"
+          applyTheme={applyTheme}
+        />
+      )}
 
       <div className="pc-app">
         <aside className="pc-painel-form">
@@ -310,14 +335,13 @@ export default function ProgramacaoCampo() {
             Programação <strong>Campo Mensal</strong>
           </div>
 
-          {/* Cabeçalho */}
           <div>
             <p className="pc-secao-titulo">Informações gerais</p>
             <div className="pc-cabecalho-inputs">
               <div className="pc-campo">
                 <label>Mês</label>
                 <select value={mesAtual} onChange={e => trocarMes(anoAtual, +e.target.value)}>
-                  {MESES_NOMES.map((m,i) => <option key={i} value={i}>{m}</option>)}
+                  {MESES_NOMES.map((m, i) => <option key={i} value={i}>{m}</option>)}
                 </select>
               </div>
               <div className="pc-campo">
@@ -336,7 +360,6 @@ export default function ProgramacaoCampo() {
             </div>
           </div>
 
-          {/* Calendário */}
           <div>
             <p className="pc-secao-titulo">Calendário do mês</p>
             <div style={{ display:'flex', flexDirection:'column', gap:'0.75rem' }}>
@@ -349,18 +372,16 @@ export default function ProgramacaoCampo() {
                     <div className="pc-semana-header">
                       <span>Semana {si + 1}</span>
                       <span className="pc-semana-datas">
-                        {de  ? `${de}/${mesAtual+1}`  : ''}
+                        {de ? `${de}/${mesAtual+1}` : ''}
                         {de && ate ? ' — ' : ''}
                         {ate ? `${ate}/${mesAtual+1}` : ''}
                       </span>
                     </div>
                     <div className="pc-dias-grid-wrap">
                       <div className="pc-dias-grid">
-                        {/* headers */}
                         {DIAS_FULL.map(d => (
                           <div key={d} className="pc-dia-col-header">{d.split('-')[0]}</div>
                         ))}
-                        {/* células */}
                         {semana.map((diaNum, di) => {
                           if (diaNum === null) return <div key={di} className="pc-dia-celula pc-vazio" />
                           const hs     = dados[diaNum] || []
@@ -375,7 +396,7 @@ export default function ProgramacaoCampo() {
                               </div>
                               <span className="pc-dia-numero">{diaNum}</span>
                               {hs.map((h, hi) => (
-                                <div key={hi} className="pc-horario-item" data-idx={hi % 5}
+                                <div key={hi} className="pc-horario-item"
                                   style={{ background: CORES_BG[hi % 5] }}>
                                   <span className="pc-hi-horario">{h.horario}</span>
                                   <span className="pc-hi-info">{h.local}</span>
@@ -408,9 +429,20 @@ export default function ProgramacaoCampo() {
         </aside>
       </div>
 
-      {/* Documento A4 — sempre no DOM, fora da tela, para captura */}
-      <div style={{ position:'fixed', top:0, left:'-9999px', zIndex:-1, visibility:'hidden', pointerEvents:'none' }}>
-        <div ref={docRef} id="pc-documento-exportavel">
+      {/* Documento A4 — sempre no DOM, fora da tela, capturado via docRef */}
+      <div
+        ref={wrapperRef}
+        style={{
+          position: 'fixed', top: 0, left: '-9999px',
+          width: '794px', background: '#fff',
+          zIndex: -9999, pointerEvents: 'none', overflow: 'visible',
+        }}
+      >
+        <div
+          ref={docRef}
+          id="pc-documento-exportavel"
+          style={{ visibility: 'hidden', position: 'absolute' }}
+        >
           <div className="pc-doc-cabecalho">
             <div className="pc-doc-ano-mes">
               <span className="pc-doc-ano">{anoAtual}</span>
@@ -434,13 +466,13 @@ export default function ProgramacaoCampo() {
                     const dest = !!destaques[diaNum]
                     const obsV = obs[diaNum] || ''
                     return (
-                      <td key={di} className={dest ? 'pc-doc-td-destaque' : ''}
+                      <td key={di}
                         style={dest ? { background:'#fff8e1', border:'2px solid #e6a817' } : {}}>
                         <span className={`pc-doc-dia-num${dest ? ' pc-doc-dia-num-dest' : ''}`}>{diaNum}</span>
                         {obsV && <div className="pc-doc-obs">{obsV}</div>}
                         {hs.map((h, hi) => (
                           <div key={hi} className="pc-doc-horario-entry"
-                            data-idx={hi % 5} style={{ background: CORES_BG[hi % 5] }}>
+                            style={{ background: CORES_BG[hi % 5] }}>
                             <span className="pc-dh-label">Horário:</span>
                             <span className="pc-dh-val">{h.horario}</span>
                             <span className="pc-dh-label">Local:</span>
@@ -462,60 +494,12 @@ export default function ProgramacaoCampo() {
   )
 }
 
-/* Modal de preview inline — move o docRef para dentro */
-function ModalPreviewInline({ docRef, onClose }) {
-  const scrollRef    = useRef()
-  const containerRef = useRef()
-
-  useEffect(() => {
-    const el  = docRef.current
-    const box = containerRef.current
-    if (!el || !box) return
-
-    el.style.visibility = 'visible'
-    el.style.position   = 'relative'
-    box.appendChild(el)
-
-    function escalar() {
-      const sc  = scrollRef.current
-      if (!sc) return
-      const dispW = sc.clientWidth  - 32
-      const dispH = sc.clientHeight - 16
-      const scale = Math.min(dispW / 794, dispH / 1123, 1)
-      el.style.transform       = `scale(${scale})`
-      el.style.transformOrigin = 'top left'
-      box.style.width  = (794 * scale) + 'px'
-      box.style.height = (1123 * scale) + 'px'
-    }
-    escalar()
-    window.addEventListener('resize', escalar)
-
-    return () => {
-      window.removeEventListener('resize', escalar)
-      // Devolve o doc ao wrapper oculto
-      const wrapper = document.querySelector('[data-pc-wrapper]')
-      if (wrapper) {
-        el.style.visibility = 'hidden'
-        el.style.position   = 'relative'
-        el.style.transform  = 'none'
-        wrapper.appendChild(el)
-      }
-    }
-  }, [docRef])
-
-  return (
-    <div className="pc-modal-preview-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="pc-modal-preview-box">
-        <div className="pc-modal-preview-header">
-          <span className="pc-modal-preview-label">Pré-visualização — A4</span>
-          <button className="pc-modal-preview-fechar" onClick={onClose}>✕</button>
-        </div>
-        <div className="pc-modal-preview-scroll" ref={scrollRef}>
-          <div ref={containerRef} style={{ position:'relative', overflow:'hidden', flexShrink:0 }} />
-        </div>
-      </div>
-    </div>
-  )
+function _blobDownload(blob, name) {
+  const url = URL.createObjectURL(blob)
+  const a   = document.createElement('a')
+  a.href = url; a.download = name
+  document.body.appendChild(a); a.click(); document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 10000)
 }
 
 const PC_STYLES = `
@@ -543,15 +527,14 @@ const PC_STYLES = `
   .pc-campo label { font-size:.72rem; font-weight:500; letter-spacing:.05em; text-transform:uppercase; color:#7a6a62; }
   .pc-campo input, .pc-campo select { background:#faf7f5; border:1px solid #d5c8c0; border-radius:7px; padding:.6rem .75rem; font-size:.95rem; color:#1c1410; width:100%; transition:border-color .15s; box-sizing:border-box; }
   .pc-campo input:focus, .pc-campo select:focus { outline:none; border-color:#8b5e3c; box-shadow:0 0 0 3px rgba(139,94,60,.12); }
-  /* semana bloco */
-  .pc-semana-bloco { background:#faf7f5; border:1px solid #d5c8c0; border-radius:10px; }
+  .pc-semana-bloco { background:#faf7f5; border:1px solid #d5c8c0; border-radius:10px; overflow:hidden; }
   .pc-semana-header { display:flex; align-items:center; justify-content:space-between; padding:.5rem 1rem; background:#3b2d25; color:#f5f0eb; font-size:.95rem; }
   .pc-semana-datas { font-size:.72rem; opacity:.7; font-style:italic; }
   .pc-dias-grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .pc-dias-grid { display:grid; grid-template-columns:repeat(7,minmax(90px,1fr)); min-width:630px; }
   .pc-dia-col-header { font-size:.7rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#7a6a62; text-align:center; padding:.45rem .2rem; border-bottom:1px solid #d5c8c0; border-right:1px solid #d5c8c0; background:#f0eae5; }
   .pc-dia-col-header:last-child { border-right:none; }
-  .pc-dia-celula { border-right:1px solid #d5c8c0; border-bottom:1px solid #d5c8c0; min-height:110px; padding:.35rem; display:flex; flex-direction:column; gap:.25rem; position:relative; overflow:visible; }
+  .pc-dia-celula { border-right:1px solid #d5c8c0; border-bottom:1px solid #d5c8c0; min-height:110px; padding:.35rem; display:flex; flex-direction:column; gap:.25rem; position:relative; }
   .pc-dia-celula:nth-child(7n) { border-right:none; }
   .pc-dia-celula.pc-destaque { background:#fff8e1; box-shadow:inset 0 0 0 2px #e6a817; }
   .pc-dia-celula.pc-destaque .pc-dia-numero { color:#b56f00; }
@@ -572,7 +555,6 @@ const PC_STYLES = `
   .pc-dia-obs-wrap { margin-top:2px; }
   .pc-dia-obs-input { width:100%; font-size:.72rem; color:#1c1410; background:rgba(255,255,255,.7); border:1px dashed #d5c8c0; border-radius:4px; padding:3px 5px; resize:none; outline:none; transition:border-color .15s; line-height:1.4; min-height:28px; box-sizing:border-box; }
   .pc-dia-obs-input:focus { border-color:#8b5e3c; background:#fff; }
-  /* Modal horário */
   .pc-modal-overlay { display:flex; position:fixed; inset:0; z-index:1000; background:rgba(28,20,16,.55); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
   .pc-modal { background:#fff; border-radius:14px; padding:2rem; width:min(400px,92vw); box-shadow:0 16px 40px rgba(28,20,16,.3); max-height:90vh; overflow-y:auto; }
   .pc-modal h3 { font-size:1.3rem; color:#1c1410; margin-bottom:.3rem; }
@@ -583,16 +565,7 @@ const PC_STYLES = `
   .pc-btn-aplicar:hover { background:#3a5a3a; }
   .pc-btn-cancelar { flex:1; padding:.7rem; border:none; border-radius:7px; font-size:.9rem; font-weight:500; cursor:pointer; background:#8b3a3a; color:#fff; }
   .pc-btn-cancelar:hover { background:#6e2c2c; }
-  /* Modal preview */
-  .pc-modal-preview-overlay { display:flex; position:fixed; inset:0; z-index:2000; background:rgba(28,20,16,.72); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
-  .pc-modal-preview-box { background:#ddd8d2; border-radius:14px; padding:1.25rem; width:min(860px,96vw); max-height:96vh; display:flex; flex-direction:column; gap:.75rem; box-shadow:0 16px 48px rgba(28,20,16,.35); }
-  .pc-modal-preview-header { display:flex; align-items:center; justify-content:space-between; }
-  .pc-modal-preview-label { font-size:.68rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#7a6e68; }
-  .pc-modal-preview-fechar { background:transparent; border:none; font-size:1.4rem; cursor:pointer; color:#7a6e68; padding:4px 8px; border-radius:6px; }
-  .pc-modal-preview-fechar:hover { background:rgba(0,0,0,.1); }
-  .pc-modal-preview-scroll { overflow-y:auto; display:flex; align-items:flex-start; justify-content:center; }
-  /* Documento A4 */
-  #pc-documento-exportavel { width:794px; height:1123px; background:#fff; padding:18px 22px; font-family:Arial,sans-serif; overflow:hidden; display:flex; flex-direction:column; position:relative; flex-shrink:0; }
+  #pc-documento-exportavel { width:794px; height:1123px; background:#fff; padding:18px 22px; font-family:Arial,sans-serif; overflow:hidden; display:flex; flex-direction:column; flex-shrink:0; }
   .pc-doc-cabecalho { display:flex; justify-content:space-around; align-items:center; padding:6px 8px; border-bottom:2px solid black; background:#cbb3a6; margin-bottom:8px; flex-shrink:0; }
   .pc-doc-ano-mes { display:flex; flex-direction:column; align-items:center; }
   .pc-doc-ano { font-size:22px; font-weight:bold; display:block; }

@@ -3,16 +3,24 @@ import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
 /**
- * useExport(previewRef, { onStart, onEnd, onError, onOpenPreview, filename })
+ * useExport(previewRef, options)
  *
- * onOpenPreview → chamado ao clicar em "Pré-Visualizar".
- *                 A página deve usar isso para abrir o <PreviewModal>.
+ * options:
+ *   onStart(msg)          — chamado ao iniciar exportação
+ *   onEnd(msg, type)      — chamado ao terminar
+ *   onError(msg)          — chamado em caso de erro
+ *   onOpenPreview()       — chamado ao abrir preview
+ *   onBeforeCapture(el)   — chamado no clone ANTES do html2canvas (injeta tema)
+ *   onAfterCapture(el)    — chamado no clone APÓS o html2canvas (remove tema)
+ *   filename              — nome base do arquivo exportado
  */
 export function useExport(previewRef, {
   onStart,
   onEnd,
   onError,
   onOpenPreview,
+  onBeforeCapture,
+  onAfterCapture,
   filename = 'documento',
 } = {}) {
 
@@ -21,6 +29,7 @@ export function useExport(previewRef, {
     const original = previewRef.current
     if (!original) throw new Error('Preview element not found')
 
+    // Wrapper fora da tela
     const wrapper = document.createElement('div')
     wrapper.style.cssText = [
       'position:fixed', 'top:0', 'left:-9999px', 'width:21cm',
@@ -28,12 +37,11 @@ export function useExport(previewRef, {
       'pointer-events:none', 'overflow:visible',
     ].join(';')
 
+    // Clone — remove id para evitar conflito com CSS global (#id { visibility:hidden })
     const clone = original.cloneNode(true)
-
-    /* Remove id para quebrar seletores CSS com !important */
     clone.removeAttribute('id')
     clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'))
-
+    clone.querySelectorAll('style').forEach(el => el.remove())
     clone.style.cssText = [
       'display:block', 'visibility:visible', 'opacity:1',
       'position:static', 'left:auto', 'top:auto',
@@ -43,6 +51,10 @@ export function useExport(previewRef, {
     wrapper.appendChild(clone)
     document.body.appendChild(wrapper)
 
+    // ── Injeta tema ANTES da captura ──
+    onBeforeCapture?.(clone)
+
+    // Aguarda imagens do clone
     const imgs = clone.querySelectorAll('img')
     await Promise.all(Array.from(imgs).map(img =>
       new Promise(resolve => {
@@ -70,13 +82,15 @@ export function useExport(previewRef, {
         height: clone.scrollHeight,
       })
     } finally {
+      // ── Remove tema APÓS a captura ──
+      onAfterCapture?.(clone)
       document.body.removeChild(wrapper)
     }
 
     return canvas
-  }, [previewRef])
+  }, [previewRef, onBeforeCapture, onAfterCapture])
 
-  /* ── PDF ─────────────────────────────────────────────── */
+  /* ── PDF ─────────────────────────────────────────────────────────── */
   const exportPDF = useCallback(async (msg = 'Gerando PDF…') => {
     onStart?.(msg)
     try {
@@ -112,7 +126,7 @@ export function useExport(previewRef, {
     }
   }, [capture, filename, onStart, onEnd, onError])
 
-  /* ── Imagem ──────────────────────────────────────────── */
+  /* ── Imagem ──────────────────────────────────────────────────────── */
   const exportIMG = useCallback(async (msg = 'Gerando imagem…') => {
     onStart?.(msg)
     try {
@@ -140,20 +154,24 @@ export function useExport(previewRef, {
     }
   }, [capture, filename, onStart, onEnd, onError])
 
-  /* ── Impressão ───────────────────────────────────────── */
+  /* ── Impressão ───────────────────────────────────────────────────── */
   const printPreview = useCallback(() => {
     const el = previewRef.current
     if (!el) return
     let styles = ''
     document.querySelectorAll('style').forEach(s => { styles += s.outerHTML })
     document.querySelectorAll('link[rel="stylesheet"]').forEach(l => { styles += l.outerHTML })
+
+    // Gera o CSS de tema para injetar na janela de impressão
+    const themeStyle = el.querySelector('#export-theme-override')?.outerHTML || ''
+
     const win = window.open('', '_blank')
     if (!win) { onError?.('Popup bloqueado. Permita popups para imprimir.'); return }
     win.document.write(`<!DOCTYPE html>
 <html lang="pt-br"><head><meta charset="UTF-8"><title>Impressão</title>${styles}
 <style>
   body { margin:0; padding:0; background:#fff; }
-  #vi-previsu, .vi-previsu, .rp-previsu, .dm-previsu {
+  #vi-previsu, .rp-previsu, .dm-previsu {
     display:block!important; visibility:visible!important;
     position:static!important; left:auto!important;
     border:none!important; box-shadow:none!important;
@@ -161,13 +179,14 @@ export function useExport(previewRef, {
     padding:.5cm!important; margin:0 auto!important;
   }
 </style>
+${themeStyle}
 </head><body>${el.outerHTML}
 <script>window.onload=function(){window.print()}<\/script>
 </body></html>`)
     win.document.close()
   }, [previewRef, onError])
 
-  /* ── Pré-visualizar — delega para a página via callback ── */
+  /* ── Pré-visualizar em nova aba ──────────────────────────────────── */
   const openPreview = useCallback(() => {
     onOpenPreview?.()
   }, [onOpenPreview])
@@ -177,7 +196,7 @@ export function useExport(previewRef, {
 
 function _blobDownload(blob, name) {
   const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
+  const a   = document.createElement('a')
   a.href = url; a.download = name
   document.body.appendChild(a); a.click(); document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 10000)

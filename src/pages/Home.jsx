@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom'
+import { useExportConfig } from '../context/ExportConfigContext'
+import { COLOR_PALETTES } from '../themes/colorTheme'
 import s from './Home.module.css'
 
 const CARDS = [
@@ -34,6 +36,9 @@ const CARDS = [
 
 export default function Home() {
   const navigate = useNavigate()
+  const { config, setConfig } = useExportConfig()
+
+  const isPrint = config.style === 'print'
 
   return (
     <div className={s.page}>
@@ -45,6 +50,98 @@ export default function Home() {
         </p>
       </div>
 
+      {/* ── Card de Estilo de Exportação ── */}
+      <div className={s.exportCard}>
+        <div className={s.exportCardHeader}>
+          <i className="fa-solid fa-palette" />
+          <span>Estilo de Exportação</span>
+          <span className={s.exportCardBadge}>PDF · Imagem · Impressão</span>
+        </div>
+
+        <p className={s.exportCardDesc}>
+          Aplica-se a: <strong>Reunião Pública</strong>, <strong>Designações Mecânicas</strong> e <strong>Programação de Campo</strong>.
+        </p>
+
+        <div className={s.exportOptions}>
+          {/* Impressão */}
+          <label className={`${s.exportOption} ${isPrint ? s.exportOptionActive : ''}`}>
+            <input
+              type="radio"
+              name="export-style"
+              value="print"
+              checked={isPrint}
+              onChange={() => setConfig({ style: 'print' })}
+            />
+            <span className={s.exportOptionDot} />
+            <div className={s.exportOptionContent}>
+              <span className={s.exportOptionTitle}>
+                <i className="fa-solid fa-print" /> Impressão
+              </span>
+              <span className={s.exportOptionSub}>Preto e branco, baixo consumo de tinta</span>
+            </div>
+          </label>
+
+          {/* Colorido */}
+          <label className={`${s.exportOption} ${!isPrint ? s.exportOptionActive : ''}`}>
+            <input
+              type="radio"
+              name="export-style"
+              value="color"
+              checked={!isPrint}
+              onChange={() => setConfig({ style: 'color' })}
+            />
+            <span className={s.exportOptionDot} />
+            <div className={s.exportOptionContent}>
+              <span className={s.exportOptionTitle}>
+                <i className="fa-solid fa-droplet" /> Colorido
+              </span>
+              <span className={s.exportOptionSub}>Cabeçalhos e títulos com cor institucional</span>
+            </div>
+          </label>
+        </div>
+
+        {/* Seletor de cor — só quando colorido */}
+        <div className={`${s.colorRow} ${isPrint ? s.colorRowDisabled : ''}`}>
+          <label className={s.colorLabel}>
+            <i className="fa-solid fa-circle-half-stroke" /> Cor principal
+          </label>
+          {isPrint ? (
+            <span className={s.colorDisabledText}>Disponível no modo Colorido</span>
+          ) : (
+            <div className={s.colorPalette}>
+              {COLOR_PALETTES.map(({ label, value }) => (
+                <button
+                  key={value}
+                  className={`${s.colorSwatch} ${config.color === value ? s.colorSwatchActive : ''}`}
+                  style={{ '--swatch-color': value }}
+                  onClick={() => setConfig({ color: value })}
+                  title={label}
+                  aria-label={label}
+                >
+                  {config.color === value && <i className="fa-solid fa-check" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Preview da cor selecionada */}
+        {!isPrint && (
+          <div className={s.colorPreviewRow}>
+            <span className={s.colorPreviewLabel}>
+              {COLOR_PALETTES.find(p => p.value === config.color)?.label ?? 'Personalizado'}
+            </span>
+            <span className={s.colorPreviewChip} style={{ background: config.color }} />
+          </div>
+        )}
+
+        <p className={s.exportNote}>
+          <i className="fa-solid fa-lock" style={{ marginRight: 5 }} />
+          Vida e Ministério sempre exporta com seu estilo original.
+        </p>
+      </div>
+
+      {/* ── Cards de módulos ── */}
       <div className={s.grid}>
         {CARDS.map(({ to, icon, color, title, desc }) => (
           <button

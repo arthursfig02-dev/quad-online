@@ -2,17 +2,13 @@ import { useEffect, useRef } from 'react'
 import s from './PreviewModal.module.css'
 
 /**
- * PreviewModal — duas estratégias de renderização:
+ * PreviewModal — duas estratégias:
  *
  * 1. previewRef  → clona o elemento (VM, RP, DM)
- *                  Remove ids e <style> internos para evitar conflito CSS.
- *
- * 2. docRef      → move o elemento A4 real para dentro do modal e devolve
- *                  ao desmontar (Programação de Campo).
- *
- * Apenas um dos dois props deve ser passado.
+ * 2. docRef      → move o elemento A4 real para dentro do modal e o devolve
+ *                  ao wrapperRef ao fechar (Programação de Campo)
  */
-export default function PreviewModal({ previewRef, docRef, onClose, title = 'Pré-visualização' }) {
+export default function PreviewModal({ previewRef, docRef, wrapperRef, onClose, title = 'Pré-visualização', applyTheme }) {
   const scrollRef    = useRef()
   const containerRef = useRef()
 
@@ -35,8 +31,10 @@ export default function PreviewModal({ previewRef, docRef, onClose, title = 'Pr�
     ].join(';')
     container.appendChild(clone)
 
-    function escalar() {
-      const scroll = scrollRef.current
+    // ── Injeta tema de exportação no clone (pré-visualização) ──
+    applyTheme?.(clone)
+
+    function escalar() {      const scroll = scrollRef.current
       if (!scroll || !clone) return
       const availW = scroll.clientWidth  - 32
       const availH = scroll.clientHeight - 32
@@ -62,25 +60,30 @@ export default function PreviewModal({ previewRef, docRef, onClose, title = 'Pr�
       document.removeEventListener('keydown', onKey)
       clone.remove()
     }
-  }, [previewRef, onClose])
+  }, [previewRef, onClose, applyTheme])
 
   /* ── ESTRATÉGIA 2: move elemento real (docRef) ──────── */
   useEffect(() => {
     if (!docRef) return
     const el        = docRef.current
+    const wrapper   = wrapperRef?.current
     const container = containerRef.current
     if (!el || !container) return
 
-    // salva estado original para restaurar ao fechar
+    // Salva estado original
     const origVisibility = el.style.visibility
     const origPosition   = el.style.position
     const origTransform  = el.style.transform
-    const origParent     = el.parentElement
 
-    el.style.visibility = 'visible'
-    el.style.position   = 'relative'
-    el.style.transform  = 'none'
+    // Move para o modal com visibilidade forçada
+    el.style.visibility    = 'visible'
+    el.style.position      = 'relative'
+    el.style.transform     = 'none'
+    el.style.transformOrigin = 'top left'
     container.appendChild(el)
+
+    // ── Injeta tema de exportação no elemento real (pré-visualização) ──
+    applyTheme?.(el)
 
     function escalar() {
       const scroll = scrollRef.current
@@ -88,10 +91,9 @@ export default function PreviewModal({ previewRef, docRef, onClose, title = 'Pr�
       const availW = scroll.clientWidth  - 32
       const availH = scroll.clientHeight - 32
       const scale  = Math.min(availW / 794, availH / 1123, 1)
-      el.style.transform       = `scale(${scale})`
-      el.style.transformOrigin = 'top left'
-      container.style.width    = (794 * scale) + 'px'
-      container.style.height   = (1123 * scale) + 'px'
+      el.style.transform    = `scale(${scale})`
+      container.style.width  = (794 * scale) + 'px'
+      container.style.height = (1123 * scale) + 'px'
     }
 
     const raf = requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -106,13 +108,19 @@ export default function PreviewModal({ previewRef, docRef, onClose, title = 'Pr�
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', escalar)
       document.removeEventListener('keydown', onKey)
-      // devolve o elemento ao lugar original
+
+      // Devolve o elemento ao wrapper original (via wrapperRef)
+      // e restaura o estado de ocultação
       el.style.visibility = origVisibility
       el.style.position   = origPosition
       el.style.transform  = origTransform
-      if (origParent) origParent.appendChild(el)
+      // Remove o tema injetado antes de devolver o elemento
+      const themeStyle = el.querySelector('#export-theme-override')
+      themeStyle?.remove()
+      const dest = wrapper || el.ownerDocument?.body
+      if (dest) dest.appendChild(el)
     }
-  }, [docRef, onClose])
+  }, [docRef, wrapperRef, onClose, applyTheme])
 
   return (
     <div

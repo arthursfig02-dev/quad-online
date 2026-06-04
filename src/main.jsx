@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import './index.css'
 
+import { ExportConfigProvider } from './context/ExportConfigContext'
 import AppShell              from './components/layout/AppShell'
 import Home                  from './pages/Home'
 import VidaMinisterio        from './pages/VidaMinisterio'
@@ -27,6 +28,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ExportConfigProvider>
+      <RouterProvider router={router} />
+    </ExportConfigProvider>
   </StrictMode>
 )
