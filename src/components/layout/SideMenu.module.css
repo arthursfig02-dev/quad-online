@@ -30,7 +30,7 @@
   padding: 13px 16px;
   background: none;
   border: none;
-  color: rgba(255,255,255,.7);
+  color: rgba(255,255,255,.6);
   font-family: 'Barlow', sans-serif;
   font-size: 15px;
   font-weight: 500;
@@ -38,11 +38,36 @@
   text-align: left;
   transition: background .18s, color .18s;
   white-space: nowrap;
+  position: relative;
 }
 
 .item:hover {
+  background: rgba(47,111,237,.25);
+  color: #fff;
+}
+
+/* ── Item ATIVO ────────────────────────────────────────── */
+.item.active {
   background: rgba(47,111,237,.35);
   color: #fff;
+  font-weight: 600;
+}
+
+/* Barra lateral esquerda de destaque */
+.item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #4da3ff;
+}
+
+/* Pip — ponto visível no modo ícones (desktop recolhido) */
+.activePip {
+  display: none;
 }
 
 .icon {
@@ -50,6 +75,11 @@
   width: 20px;
   text-align: center;
   flex-shrink: 0;
+}
+
+/* Ícone mais brilhante quando ativo */
+.item.active .icon {
+  color: #4da3ff;
 }
 
 .label {
@@ -62,7 +92,7 @@
   align-self: flex-end;
   background: none;
   border: none;
-  color: rgba(255,255,255,.5);
+  color: rgba(255,255,255,.4);
   font-size: 14px;
   padding: 10px 14px;
   cursor: pointer;
@@ -72,19 +102,28 @@
 
 /* ════════════════════════════════════════════════════════
    DESKTOP  (>= 900px)
-   Aberto  → largura total (220px) — labels visíveis
-   Fechado → largura ícones (56px) — labels ocultos
    ════════════════════════════════════════════════════════ */
 .desktop.open   { width: var(--shell-menu-w-open); }
 .desktop.closed { width: var(--shell-menu-w-icons); }
 
-.desktop.closed .label  { opacity: 0; width: 0; pointer-events: none; }
-.desktop.open   .label  { opacity: 1; transition: opacity .2s .05s; }
+.desktop.closed .label   { opacity: 0; width: 0; pointer-events: none; }
+.desktop.open   .label   { opacity: 1; transition: opacity .2s .05s; }
+
+/* No modo ícones, mostra um pip abaixo do ícone ativo */
+.desktop.closed .item.active .activePip {
+  display: block;
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #4da3ff;
+}
 
 /* ════════════════════════════════════════════════════════
    MOBILE  (< 900px)
-   Menu desliza sobre o conteúdo (drawer)
-   Aberto  → visível; Fechado → fora da tela
    ════════════════════════════════════════════════════════ */
 .mobile {
   width: 70vw;
@@ -94,10 +133,9 @@
   z-index: 990;
 }
 
-.mobile.open  { transform: translateX(0); }
-.mobile.closed{ transform: translateX(-100%); }
+.mobile.open   { transform: translateX(0); }
+.mobile.closed { transform: translateX(-100%); }
 
-/* Overlay escuro atrás do drawer */
 .overlay {
   position: fixed;
   inset: 0;

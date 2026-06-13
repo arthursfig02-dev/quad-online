@@ -14,20 +14,29 @@
   right: 0;
   top: var(--shell-header-h);
   z-index: 100;
-  /* largura acompanha o menu lateral via variável */
   left: var(--shell-menu-w-icons);
   transition: left .25s ease;
 }
 
+/* ── Badges de estado ── */
 .badge {
-  background: #f59e0b;
-  color: #fff;
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 10px;
+  padding: 3px 11px;
   border-radius: 20px;
   letter-spacing: .5px;
   margin-right: 4px;
+  transition: opacity .3s;
+}
+
+.badgeUnsaved {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.badgeSaved {
+  background: #22c55e;
+  color: #fff;
 }
 
 .btn {
@@ -49,7 +58,7 @@
 
 .btn:hover { background: #1c54c2; }
 
-/* Em desktop a barra existe, o mobile fica escondido */
+/* Em desktop a área mobile fica escondida */
 .mobileArea { display: none; }
 
 /* ══════════════════════════════════════════════════════
@@ -57,10 +66,8 @@
    ══════════════════════════════════════════════════════ */
 @media (max-width: 699px) {
 
-  /* Esconde barra de desktop */
   .bar { display: none; }
 
-  /* Container do FAB + sheet */
   .mobileArea {
     display: block;
     position: fixed;
@@ -69,16 +76,15 @@
     z-index: 500;
   }
 
-  /* Overlay escuro — só existe no DOM quando o sheet está aberto */
   .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, .45);
+    background: rgba(0,0,0,.45);
     backdrop-filter: blur(2px);
     pointer-events: all;
   }
 
-  /* ── Bottom sheet ──────────────────────────────────── */
+  /* ── Bottom sheet ── */
   .sheet {
     position: absolute;
     bottom: 0;
@@ -94,11 +100,9 @@
     max-height: 80vh;
     overflow-y: auto;
   }
-  .sheetOpen {
-    transform: translateY(0);
-  }
 
-  /* Alça visual do sheet */
+  .sheetOpen { transform: translateY(0); }
+
   .sheetHandle {
     width: 40px;
     height: 4px;
@@ -121,9 +125,8 @@
     border-bottom: 1px solid #eef1ff;
   }
 
-  .sheetBadge {
-    background: #f59e0b;
-    color: #fff;
+  /* Badges dentro do sheet */
+  .sheetBadgeBase {
     font-size: 10px;
     font-weight: 700;
     padding: 2px 8px;
@@ -131,11 +134,10 @@
     letter-spacing: .5px;
   }
 
-  /* Lista de ações */
-  .sheetList {
-    list-style: none;
-    padding: 6px 0;
-  }
+  .sheetBadgeUnsaved { background: #f59e0b; color: #fff; }
+  .sheetBadgeSaved   { background: #22c55e; color: #fff; }
+
+  .sheetList { list-style: none; padding: 6px 0; }
 
   .sheetItem {
     width: 100%;
@@ -156,10 +158,9 @@
   }
 
   .sheetItem:last-child { border-bottom: none; }
-  .sheetItem:hover { background: #f5f6ff; }
+  .sheetItem:hover  { background: #f5f6ff; }
   .sheetItem:active { background: #eef1ff; }
 
-  /* Ícone colorido de cada item */
   .sheetIcon {
     width: 40px;
     height: 40px;
@@ -175,7 +176,7 @@
 
   .sheetLabel { flex: 1; }
 
-  /* ── FAB (botão flutuante) ─────────────────────────── */
+  /* ── FAB ── */
   .fab {
     position: absolute;
     bottom: 28px;
@@ -196,6 +197,21 @@
     pointer-events: all;
   }
 
-  .fab:hover  { background: #1a13a6; }
-  .fabOpen    { background: #1a13a6; transform: scale(.92); }
+  .fab:hover { background: #1a13a6; }
+  .fabOpen   { background: #1a13a6; transform: scale(.92); }
+
+  /* Pip de status no canto do FAB */
+  .fabPip {
+    position: absolute;
+    bottom: 56px;
+    right: 18px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    pointer-events: none;
+  }
+
+  .fabPipUnsaved { background: #f59e0b; }
+  .fabPipSaved   { background: #22c55e; }
 }

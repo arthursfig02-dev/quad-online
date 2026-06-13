@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import Toast from '../components/ui/Toast'
+import PageHeader from '../components/ui/PageHeader'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
+import { useAutoSave } from '../hooks/useAutoSave'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
@@ -32,13 +35,17 @@ function TrLinha({ label, valor }) {
 export default function ReuniaoPublica() {
   const toastRef   = useRef()
   const previewRef = useRef()
+  const skipAutoSaveRef = useRef(false)
 
   const [congregacao, setCongregacao] = useState('')
   const [mes,         setMes]         = useState('')
   const [ano,         setAno]         = useState('')
   const [semanas,     setSemanas]     = useState([novaSemana(1)])
-  const [semanaAtual, setSemanaAtual] = useState(2)  // próximo número
+  const [semanaAtual, setSemanaAtual] = useState(2)
+  const [unsaved,     setUnsaved]     = useState(false)  // próximo número
   const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
+  const [confirmOpen,  setConfirmOpen]  = useState(false)
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
 
   /* ── Tema de exportação ─────────────────────────────── */
@@ -69,16 +76,33 @@ export default function ReuniaoPublica() {
       setMes(d.mes || '')
       setAno(d.ano || '')
       setSemanas(d.semanas || [novaSemana(1)])
-      setSemanaAtual(d.semanaAtual || (d.semanas?.length ?? 0) + 1)
+      setSemanaAtual((d.semanas?.length ?? 1) + 1)
     } catch { /* ignora */ }
   }, [])
 
   /* ── Salvar / Carregar ───────────────────────────────── */
   function saveData() {
     localStorage.setItem(LS_KEY, JSON.stringify({ congregacao, mes, ano, semanas, semanaAtual }))
+    setUnsaved(false)
     toastRef.current?.show('✔ Dados salvos com sucesso!', 'success')
   }
+
+  function saveDataSilent() {
+    if (skipAutoSaveRef.current) {
+      localStorage.removeItem(LS_KEY)
+      skipAutoSaveRef.current = false
+      setUnsaved(false)
+      return
+    }
+    localStorage.setItem(LS_KEY, JSON.stringify({ congregacao, mes, ano, semanas, semanaAtual }))
+    setUnsaved(false)
+  }
+
   function loadData() {
+    if (unsaved) { setConfirmOpen(true); return }
+    loadDataConfirmed()
+  }
+  function loadDataConfirmed() {
     const raw = localStorage.getItem(LS_KEY)
     if (!raw) { toastRef.current?.show('Nenhum dado salvo encontrado.', 'warning'); return }
     try {
@@ -87,7 +111,8 @@ export default function ReuniaoPublica() {
       setMes(d.mes || '')
       setAno(d.ano || '')
       setSemanas(d.semanas || [novaSemana(1)])
-      setSemanaAtual(d.semanaAtual || (d.semanas?.length ?? 0) + 1)
+      setSemanaAtual((d.semanas?.length ?? 1) + 1)
+      setUnsaved(false)
       toastRef.current?.show('📂 Dados carregados!', 'info')
     } catch {
       toastRef.current?.show('Erro ao carregar dados.', 'error')
@@ -96,18 +121,46 @@ export default function ReuniaoPublica() {
 
   /* ── CRUD semanas ────────────────────────────────────── */
   function adicionarSemana() {
-    const num = semanaAtual
-    setSemanas(prev => [...prev, novaSemana(num)])
-    setSemanaAtual(num + 1)
+    setSemanas(prev => {
+      const next = [...prev, novaSemana(prev.length + 1)]
+      setSemanaAtual(next.length + 1)
+      return next
+    })
+    setUnsaved(true)
   }
   function atualizarSemana(num, campo, valor) {
     setSemanas(prev => prev.map(s => s.num === num ? { ...s, [campo]: valor } : s))
+    setUnsaved(true)
   }
   function removerSemana(num) {
-    setSemanas(prev => prev.filter(s => s.num !== num))
+    setSemanas(prev => {
+      const next = prev
+        .filter(s => s.num !== num)
+        .map((s, i) => ({ ...s, num: i + 1 }))
+      const normalized = next.length ? next : [novaSemana(1)]
+      setSemanaAtual(normalized.length + 1)
+      return normalized
+    })
+    setUnsaved(true)
+  }
+
+  function limparFormulario() {
+    skipAutoSaveRef.current = true
+    localStorage.removeItem(LS_KEY)
+    setCongregacao('')
+    setMes('')
+    setAno('')
+    setSemanas([novaSemana(1)])
+    setSemanaAtual(2)
+    setUnsaved(false)
+    setClearConfirmOpen(false)
+    toastRef.current?.show('FormulÃ¡rio e histÃ³rico limpos.', 'success')
   }
 
   /* ── Ações da barra ──────────────────────────────────── */
+  /* ── Auto-save ── */
+  useAutoSave(saveDataSilent, [congregacao, mes, ano, semanas, semanaAtual])
+
   const actions = [
     { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: saveData  },
     { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: loadData  },
@@ -115,6 +168,7 @@ export default function ReuniaoPublica() {
     { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: printPreview },
     { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: () => exportPDF('Gerando PDF…')   },
     { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: () => exportIMG('Gerando imagem…') },
+    { id: 'limpar',   icon: 'fa-trash-can',        label: 'Limpar',         onClick: () => setClearConfirmOpen(true) },
   ]
 
   /* ════════════════════════════════════════════════════════
@@ -133,7 +187,35 @@ export default function ReuniaoPublica() {
           applyTheme={applyTheme}
         />
       )}
-      <PageActionBar actions={actions} />
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Substituir dados?"
+        message="Você tem alterações não salvas. Ao carregar, elas serão perdidas."
+        confirmLabel="Carregar mesmo assim"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={() => { setConfirmOpen(false); loadDataConfirmed() }}
+        onCancel={() => setConfirmOpen(false)}
+      />
+      <ConfirmDialog
+        open={clearConfirmOpen}
+        title="Limpar tudo?"
+        message="Isso vai apagar todo o formulÃ¡rio e o histÃ³rico salvo desta pÃ¡gina."
+        confirmLabel="Limpar tudo"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={limparFormulario}
+        onCancel={() => setClearConfirmOpen(false)}
+      />
+      <PageActionBar actions={actions} unsaved={unsaved} />
+      <div className="page-wrap">
+
+      <PageHeader
+        icon="fa-person-chalkboard"
+        title="Reunião Pública"
+        subtitle="Programação mensal"
+        color="#1e3a6e"
+      />
 
       <div className="rp-layout">
         {/* ── EDITOR ──────────────────────────────────────── */}
@@ -145,33 +227,33 @@ export default function ReuniaoPublica() {
               <div className="rp-bloco">
                 <label>CONGREGAÇÃO</label>
                 <input type="text" placeholder="Nome da Congregação"
-                  value={congregacao} onChange={e => setCongregacao(e.target.value)} />
+                  value={congregacao} onChange={e => { setCongregacao(e.target.value); setUnsaved(true) }} />
               </div>
               <div className="rp-bloco">
                 <label>MÊS</label>
                 <input type="text" placeholder="ex: Março"
-                  value={mes} onChange={e => setMes(e.target.value)} />
+                  value={mes} onChange={e => { setMes(e.target.value); setUnsaved(true) }} />
               </div>
               <div className="rp-bloco">
                 <label>ANO</label>
                 <input type="text" placeholder="ex: 2026"
-                  value={ano} onChange={e => setAno(e.target.value)} />
+                  value={ano} onChange={e => { setAno(e.target.value); setUnsaved(true) }} />
               </div>
             </div>
 
-            {/* Semanas */}
+            {/* Dias */}
             <div style={{ marginTop: 15 }}>
-              <div className="rp-titu"><p>Semanas</p><hr /></div>
+              <div className="rp-titu"><p>Dia</p><hr /></div>
               {semanas.map(s => (
                 <div key={s.num} className="rp-campo">
                   <div className="rp-titu" style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <p>Semana {s.num}</p>
+                    <p>Dia {s.num}</p>
                     {semanas.length > 1 && (
                       <button className="rp-btn-remove" onClick={() => removerSemana(s.num)}>✕ Remover</button>
                     )}
                   </div>
                   {[
-                    ['data',        'DATA | TÍTULO DA SEMANA', 'ex: 03/03 - 09/03'],
+                    ['data',        'DATA | TÍTULO DO DIA', 'ex: 03/03 - 09/03'],
                     ['presidente',  'PRESIDENTE',              'Nome'],
                     ['orador',      'ORADOR',                  'Nome'],
                     ['congregacao', 'CONGREGAÇÃO DO ORADOR',   'Nome'],
@@ -189,7 +271,7 @@ export default function ReuniaoPublica() {
                 </div>
               ))}
               <div style={{ display:'flex', justifyContent:'flex-end', marginTop:12 }}>
-                <button className="rp-btn-add-sem" onClick={adicionarSemana}>+ Adicionar Semana</button>
+                <button className="rp-btn-add-sem" onClick={adicionarSemana}>+ Adicionar Dia</button>
               </div>
             </div>
           </article>
@@ -213,7 +295,7 @@ export default function ReuniaoPublica() {
                   <table className="rp-semanas-table">
                     <tbody>
                       <tr className="rp-semana-titulo">
-                        <th colSpan={99}>{s.data ? `SEMANA: ${s.data}` : `SEMANA ${s.num}`}</th>
+                        <th colSpan={99}>{s.data ? `DIA: ${s.data}` : `DIA ${s.num}`}</th>
                       </tr>
                       <TrLinha label="PRESIDENTE:"    valor={s.presidente}  />
                       <TrLinha label="ORADOR:"        valor={s.orador}      />
@@ -229,6 +311,7 @@ export default function ReuniaoPublica() {
           </div>
         </section>
       </div>
+      </div>{/* /page-wrap */}
     </>
   )
 }
@@ -237,13 +320,17 @@ export default function ReuniaoPublica() {
    ESTILOS SCOPED — idênticos ao original
    ════════════════════════════════════════════════════════ */
 const RP_STYLES = `
+  .page-wrap {
+    margin-top: var(--shell-total-top);
+  }
+
   .rp-layout {
     display: flex;
     justify-content: center;
     align-items: flex-start;
     gap: 20px;
-    padding: 10px 16px 80px;
-    margin-top: 58px;
+    padding: 2px 16px 80px;
+    margin-top: 0;
     background: #E9ECEF;
     min-height: 100%;
   }
@@ -299,4 +386,10 @@ const RP_STYLES = `
     .rp-previsu { display:block; }
     .rp-layout { align-items:flex-start; }
   }
+  @media (max-width: 699px) {
+    .page-wrap {
+      margin-top: 0;
+    }
+  }
+
 `

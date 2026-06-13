@@ -1,10 +1,5 @@
 import s from './AppHeader.module.css'
 
-/**
- * AppHeader
- * onBurgerClick → abre/fecha menu em mobile
- * menuOpen      → estado atual do menu (para aria)
- */
 export default function AppHeader({ onBurgerClick, menuOpen }) {
   return (
     <header className={s.header}>

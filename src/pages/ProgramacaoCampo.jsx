@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Toast from '../components/ui/Toast'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
+import PageHeader from '../components/ui/PageHeader'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import PreviewModal from '../components/ui/PreviewModal'
@@ -176,6 +178,17 @@ export default function ProgramacaoCampo() {
     toastRef.current?.show('📂 Dados carregados!', 'info')
   }
 
+  function limparFormulario() {
+    skipAutoSaveRef.current = true
+    localStorage.removeItem(chaveLS())
+    setDados({})
+    setDestaques({})
+    setObs({})
+    setCongr('')
+    setClearConfirmOpen(false)
+    toastRef.current?.show('Formulário e histórico limpos.', 'success')
+  }
+
   /* ── Captura do documento A4 ───────────────────────────────────────
    *
    * CORREÇÕES aplicadas:
@@ -315,6 +328,16 @@ export default function ProgramacaoCampo() {
       <Toast ref={toastRef} />
       <PageActionBar actions={actions} />
 
+      <ConfirmDialog
+        open={clearConfirmOpen}
+        title="Limpar tudo?"
+        message="Isso vai apagar todo o formulário e o histórico salvo deste mês."
+        confirmLabel="Limpar tudo"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={limparFormulario}
+        onCancel={() => setClearConfirmOpen(false)}
+      />
       {/* Modal horário */}
       {modalCtx && <ModalHorario ctx={modalCtx} onClose={fecharModal} onSave={salvarHorario} />}
 
@@ -331,9 +354,12 @@ export default function ProgramacaoCampo() {
 
       <div className="pc-app">
         <aside className="pc-painel-form">
-          <div className="pc-form-logo">
-            Programação <strong>Campo Mensal</strong>
-          </div>
+          <PageHeader
+            icon="fa-calendar-days"
+            title="Programação de Campo"
+            subtitle="Calendário mensal de campo"
+            color="#3b2d25"
+          />
 
           <div>
             <p className="pc-secao-titulo">Informações gerais</p>
@@ -504,13 +530,13 @@ function _blobDownload(blob, name) {
 
 const PC_STYLES = `
   .pc-app {
-    padding-top: 58px;
+    padding-top: var(--shell-total-top);
     min-height: 100%;
     background: #f5f0eb;
   }
   .pc-painel-form {
     background: #fff;
-    padding: 2rem 1.5rem;
+    padding: 0 1.5rem 2rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -518,8 +544,6 @@ const PC_STYLES = `
     margin: 0 auto;
     width: 100%;
   }
-  .pc-form-logo { font-family:'EB Garamond',serif; font-size:1.1rem; font-style:italic; color:#8b5e3c; letter-spacing:.03em; border-bottom:1px solid #d5c8c0; padding-bottom:1rem; }
-  .pc-form-logo strong { display:block; font-size:1.6rem; font-style:normal; font-weight:600; color:#1c1410; letter-spacing:-.02em; }
   .pc-secao-titulo { font-size:.7rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#7a6a62; margin-bottom:.6rem; }
   .pc-cabecalho-inputs { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
   .pc-campo-full { grid-column:1/-1; }
@@ -584,4 +608,10 @@ const PC_STYLES = `
   .pc-doc-horario-entry:first-child { border-top:none; }
   .pc-dh-label { font-size:9px; color:#888; display:block; }
   .pc-dh-val   { font-size:11px; color:#111; font-weight:bold; display:block; line-height:1.3; }
+  @media (max-width: 699px) {
+    .pc-app {
+      padding-top: 2px;
+    }
+  }
+
 `

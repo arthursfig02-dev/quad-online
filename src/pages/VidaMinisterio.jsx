@@ -1,5 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Toast from '../components/ui/Toast'
+import PageHeader from '../components/ui/PageHeader'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
+import { useAutoSave } from '../hooks/useAutoSave'
 import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
@@ -143,12 +146,15 @@ function VidaCard({ item, idx, onUpdate, onRemove, onDragStart, onDragEnd, onDra
    PÁGINA PRINCIPAL
    ═══════════════════════════════════════════════════════════ */
 export default function VidaMinisterio() {
-  const toastRef   = useRef()
-  const previewRef = useRef()
+  const toastRef        = useRef()
+  const previewRef      = useRef()
+  const skipAutoSaveRef = useRef(false)
 
   /* ── Estado geral ────────────────────────── */
-  const [unsaved,     setUnsaved]     = useState(false)
-  const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
+  const [unsaved,          setUnsaved]          = useState(false)
+  const [overlay,          setOverlay]          = useState({ visible: false, msg: '' })
+  const [confirmOpen,      setConfirmOpen]      = useState(false)
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [congregacao, setCongregacao] = useState('')
   const [semana,      setSemana]      = useState('')
   const [presidente,  setPresidente]  = useState('')
@@ -214,7 +220,31 @@ export default function VidaMinisterio() {
     toastRef.current?.show('✔ Dados salvos com sucesso!', 'success')
   }
 
+  /* Auto-save silencioso — sem toast */
+  function saveDataSilent() {
+    if (skipAutoSaveRef.current) { skipAutoSaveRef.current = false; return }
+    if (skipAutoSaveRef.current) {
+      localStorage.removeItem(LS_KEY)
+      skipAutoSaveRef.current = false
+      setUnsaved(false)
+      return
+    }
+    const d = {
+      congregacao, semana, presidente, oracao, cantico1, visitaSS,
+      tes1Tema, tes1Resp, tes2Resp, tes3Est,
+      cantico2, facItems, ebcDir, ebcLei, vssTema, vssResp, vssTempo,
+      vidaItems, cantico3, oracaoFinal,
+      _facSeed: facSeedRef.current, _vidaSeed: vidaSeedRef.current,
+    }
+    localStorage.setItem(LS_KEY, JSON.stringify(d))
+    setUnsaved(false)
+  }
+
   function loadData() {
+    if (unsaved) { setConfirmOpen(true); return }
+    loadDataConfirmed()
+  }
+  function loadDataConfirmed() {
     const raw = localStorage.getItem(LS_KEY)
     if (!raw) { toastRef.current?.show('Nenhum dado salvo encontrado.', 'warning'); return }
     const d = JSON.parse(raw)
@@ -242,6 +272,36 @@ export default function VidaMinisterio() {
     vidaSeedRef.current = d._vidaSeed || 0
     setUnsaved(false)
     toastRef.current?.show('📂 Dados carregados!', 'info')
+  }
+
+  function limparFormulario() {
+    skipAutoSaveRef.current = true
+    localStorage.removeItem(LS_KEY)
+    setCongregacao('')
+    setSemana('')
+    setPresidente('')
+    setOracao('')
+    setCantico1('')
+    setVisitaSS(false)
+    setTes1Tema('')
+    setTes1Resp('')
+    setTes2Resp('')
+    setTes3Est('')
+    setCantico2('')
+    setFacItems([])
+    setEbcDir('')
+    setEbcLei('')
+    setVssTema('')
+    setVssResp('')
+    setVssTempo('30 min')
+    setVidaItems([])
+    setCantico3('')
+    setOracaoFinal('')
+    facSeedRef.current  = 0
+    vidaSeedRef.current = 0
+    setUnsaved(false)
+    setClearConfirmOpen(false)
+    toastRef.current?.show('Formulário e histórico limpos.', 'success')
   }
 
   /* Carrega automaticamente se houver dados salvos */
@@ -313,6 +373,14 @@ export default function VidaMinisterio() {
     mark()
   }
 
+  /* ── Auto-save com debounce de 2s ──────────── */
+  useAutoSave(saveDataSilent, [
+    congregacao, semana, presidente, oracao, cantico1, visitaSS,
+    tes1Tema, tes1Resp, tes2Resp, tes3Est,
+    cantico2, facItems, ebcDir, ebcLei, vssTema, vssResp, vssTempo,
+    vidaItems, cantico3, oracaoFinal,
+  ])
+
   /* ── Índices dinâmicos ───────────────────── */
   let idx = 4
   const facIdxMap  = {}
@@ -350,7 +418,35 @@ export default function VidaMinisterio() {
           title="Vida e Ministério"
         />
       )}
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Substituir dados?"
+        message="Você tem alterações não salvas. Ao carregar, elas serão perdidas."
+        confirmLabel="Carregar mesmo assim"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={() => { setConfirmOpen(false); loadDataConfirmed() }}
+        onCancel={() => setConfirmOpen(false)}
+      />
+      <ConfirmDialog
+        open={clearConfirmOpen}
+        title="Limpar tudo?"
+        message="Isso vai apagar todo o formulário e o histórico salvo desta página."
+        confirmLabel="Limpar tudo"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={limparFormulario}
+        onCancel={() => setClearConfirmOpen(false)}
+      />
       <PageActionBar actions={actions} unsaved={unsaved} />
+      <div className="page-wrap">
+
+      <PageHeader
+        icon="fa-book"
+        title="Vida e Ministério"
+        subtitle="Reunião de meio de semana"
+        color="#0e097f"
+      />
 
       <div className="vm-layout">
         {/* ── EDITOR ─────────────────────────────────────────── */}
@@ -367,7 +463,7 @@ export default function VidaMinisterio() {
             <div className="field-row" style={{ alignItems: 'flex-end' }}>
               <div className="field-group narrow">
                 <label htmlFor="f-cantico1">Cântico inicial</label>
-                <input type="number" id="f-cantico1" placeholder="Nº" min="1" max="151"
+                <input type="number" id="f-cantico1" placeholder="Nº" min="1" max="151" inputMode="numeric"
                   value={cantico1} onChange={e => { setCantico1(e.target.value); mark() }} />
               </div>
               <div className="field-group" style={{ display:'flex', alignItems:'flex-end', justifyContent:'flex-end', paddingBottom:2 }}>
@@ -412,7 +508,7 @@ export default function VidaMinisterio() {
             <div className="field-row">
               <div className="field-group narrow">
                 <label htmlFor="f-cantico2">Cântico</label>
-                <input type="number" id="f-cantico2" placeholder="Nº" min="1" max="151"
+                <input type="number" id="f-cantico2" placeholder="Nº" min="1" max="151" inputMode="numeric"
                   value={cantico2} onChange={e => { setCantico2(e.target.value); mark() }} />
               </div>
             </div>
@@ -464,7 +560,7 @@ export default function VidaMinisterio() {
             <div className="field-row">
               <div className="field-group narrow">
                 <label htmlFor="f-cantico3">Cântico final</label>
-                <input type="number" id="f-cantico3" placeholder="Nº" min="1" max="151"
+                <input type="number" id="f-cantico3" placeholder="Nº" min="1" max="151" inputMode="numeric"
                   value={cantico3} onChange={e => { setCantico3(e.target.value); mark() }} />
               </div>
               <Field label="Oração final" id="f-oracao-final" placeholder="Nome" value={oracaoFinal} onChange={set(setOracaoFinal)} />
@@ -602,6 +698,7 @@ export default function VidaMinisterio() {
           </section>
         </article>
       </div>
+      </div>{/* /page-wrap */}
     </>
   )
 }
@@ -610,13 +707,17 @@ export default function VidaMinisterio() {
    ESTILOS SCOPED — idênticos ao original, isolados na página
    ════════════════════════════════════════════════════════════ */
 const VM_STYLES = `
+  .page-wrap {
+    margin-top: var(--shell-total-top);
+  }
+
   .vm-layout {
-    margin-top: 58px;
+    margin-top: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     gap: 24px;
-    padding: 16px 20px 60px;
+    padding: 2px 20px 60px;
   }
   #vi-editor {
     width: 390px;
@@ -746,4 +847,10 @@ const VM_STYLES = `
       width:21cm!important; min-height:29.7cm!important; padding:.5cm!important; margin:0 auto!important;
     }
   }
+  @media (max-width: 699px) {
+    .page-wrap {
+      margin-top: 0px;
+    }
+  }
+
 `

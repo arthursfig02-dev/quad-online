@@ -18,24 +18,23 @@
   align-items: center;
   gap: 10px;
   color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 1px;
 }
 
-.brand i {
+.brand > i {
   color: #4da3ff;
   font-size: 20px;
+  flex-shrink: 0;
 }
 
 .brandName {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 20px;
+  font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
+  color: #fff;
 }
 
-/* Burger — visível apenas em mobile */
 .burger {
   display: none;
   background: none;
@@ -46,11 +45,10 @@
   padding: 6px 8px;
   border-radius: 6px;
   transition: background .2s;
+  flex-shrink: 0;
 }
 
-.burger:hover {
-  background: rgba(255,255,255,.12);
-}
+.burger:hover { background: rgba(255,255,255,.12); }
 
 @media (max-width: 900px) {
   .burger { display: block; }

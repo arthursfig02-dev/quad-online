@@ -11,7 +11,10 @@
 /* ─── VARIÁVEIS GLOBAIS ─────────────────────────────────── */
 :root {
   /* Paleta shell */
-  --shell-header-h: 52px;
+  --shell-header-h:    52px;
+  --shell-actionbar-h: 52px;  /* altura da PageActionBar fixa */
+  --shell-total-top:   45px; 
+   --shell-total-p-bar: 0px;/* header + actionbar */
   --shell-menu-w-open: 220px;
   --shell-menu-w-icons: 56px;
   --shell-footer-h: 36px;
