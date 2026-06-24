@@ -395,6 +395,7 @@ export default function VidaMinisterio() {
     { id: 'imprimir', icon: 'fa-print',             label: 'Imprimir',       onClick: printPreview },
     { id: 'pdf',      icon: 'fa-file-pdf',           label: 'Baixar PDF',     onClick: () => exportPDF('Gerando PDF…')  },
     { id: 'foto',     icon: 'fa-image',              label: 'Baixar Foto',    onClick: () => exportIMG('Gerando imagem…') },
+    { id: 'limpar',   icon: 'fa-trash-can',        label: 'Limpar',         onClick: () => setClearConfirmOpen(true) },
   ]
 
   /* ── PV helper ───────────────────────────── */
