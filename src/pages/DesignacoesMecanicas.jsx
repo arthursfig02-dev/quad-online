@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import Toast from '../components/ui/Toast'
 import PageHeader from '../components/ui/PageHeader'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
@@ -11,6 +11,15 @@ import { useThemeLive } from '../hooks/useThemeLive'
 import PreviewModal from '../components/ui/PreviewModal'
 
 const LS_KEY = 'designacoes-mecanicas-dados'
+
+const getInitialData = () => {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
 
 function novaSemana(num) {
   return { num, data: '', indicadores: [], volantes: [], som: '', palco: '' }
@@ -61,11 +70,13 @@ export default function DesignacoesMecanicas() {
   const previewRef = useRef()
   const skipAutoSaveRef = useRef(false)
 
-  const [congregacao, setCongregacao] = useState('')
-  const [mes,         setMes]         = useState('')
-  const [ano,         setAno]         = useState('')
-  const [semanas,     setSemanas]     = useState([novaSemana(1)])
-  const [proxNum,     setProxNum]     = useState(2)
+  const initialData = getInitialData()
+
+  const [congregacao, setCongregacao] = useState(initialData?.congregacao || '')
+  const [mes,         setMes]         = useState(initialData?.mes || '')
+  const [ano,         setAno]         = useState(initialData?.ano || '')
+  const [semanas,     setSemanas]     = useState(initialData?.semanas || [novaSemana(1)])
+  const [proxNum,     setProxNum]     = useState(initialData?.proxNum || ((initialData?.semanas?.length ?? 1) + 1))
   const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
   const [confirmOpen,  setConfirmOpen]  = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
@@ -92,19 +103,7 @@ export default function DesignacoesMecanicas() {
     filename,
   })
 
-  /* ── init ── */
-  useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY)
-    if (!raw) return
-    try {
-      const d = JSON.parse(raw)
-      setCongregacao(d.congregacao || '')
-      setMes(d.mes || '')
-      setAno(d.ano || '')
-      setSemanas(d.semanas || [novaSemana(1)])
-      setProxNum((d.semanas?.length ?? 1) + 1)
-    } catch { /* ignora */ }
-  }, [])
+
 
   /* ── salvar / carregar ── */
   function saveData() {

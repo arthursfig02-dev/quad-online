@@ -181,7 +181,7 @@ export function useExport(previewRef, {
 </style>
 ${themeStyle}
 </head><body>${el.outerHTML}
-<script>window.onload=function(){window.print()}<\/script>
+<script>window.onload=function(){window.print()}</script>
 </body></html>`)
     win.document.close()
   }, [previewRef, onError])

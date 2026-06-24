@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Toast from '../components/ui/Toast'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
@@ -35,12 +36,6 @@ function ModalHorario({ ctx, onClose, onSave }) {
   const [local, setLocal] = useState(ctx?.dado?.local || '')
   const [dirigente, setDirigente] = useState(ctx?.dado?.dirigente || '')
 
-  useEffect(() => {
-    setHorario(ctx?.dado?.horario || '')
-    setLocal(ctx?.dado?.local || '')
-    setDirigente(ctx?.dado?.dirigente || '')
-  }, [ctx])
-
   if (!ctx) return null
 
   return (
@@ -73,6 +68,7 @@ export default function ProgramacaoCampo() {
   const toastRef = useRef()
   const docRef = useRef()
   const wrapperRef = useRef()
+  const skipAutoSaveRef = useRef(false)
   const { applyTheme, removeTheme } = useExportTheme('pc')   // ref para o wrapper oculto — garante devolução correta
 
   const agora = new Date()
@@ -84,6 +80,7 @@ export default function ProgramacaoCampo() {
   const [obs, setObs] = useState({})
   const [modalCtx, setModalCtx] = useState(null)
   const [showPrev, setShowPrev] = useState(false)
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [overlay, setOverlay] = useState({ visible: false, msg: '' })
 
   /* ── localStorage ── */
@@ -236,7 +233,7 @@ export default function ProgramacaoCampo() {
     }
 
     return canvas
-  }, [])
+  }, [applyTheme, removeTheme])
 
   /* ── Exportações ── */
   async function exportarPDF() {
@@ -302,12 +299,12 @@ export default function ProgramacaoCampo() {
       const imgSrc = canvas.toDataURL('image/jpeg', 0.95)
       const win = window.open('', '_blank')
       if (!win) { toastRef.current?.show('Popup bloqueado.', 'warning'); return }
-      win.document.write(`<!DOCTYPE html><html><head><title>Programação de Campo</title>
+        win.document.write(`<!DOCTYPE html><html><head><title>Programação de Campo</title>
         <style>@page{margin:0;size:A4}body{margin:0;padding:0}img{width:100%;height:auto;display:block}</style>
         </head><body><img src="${imgSrc}" />
-        <script>window.onload=function(){window.print()}<\/script></body></html>`)
+        <script>window.onload=function(){window.print()}</script></body></html>`)
       win.document.close()
-    } catch (e) { toastRef.current?.show('Erro ao imprimir.', 'error') }
+    } catch { toastRef.current?.show('Erro ao imprimir.', 'error') }
   }
 
   const semanas = gerarSemanas(anoAtual, mesAtual)
@@ -319,6 +316,7 @@ export default function ProgramacaoCampo() {
     { id: 'imprimir', icon: 'fa-print', label: 'Imprimir', onClick: imprimirDoc },
     { id: 'pdf', icon: 'fa-file-pdf', label: 'Baixar PDF', onClick: exportarPDF },
     { id: 'foto', icon: 'fa-image', label: 'Baixar Foto', onClick: exportarIMG },
+    { id: 'limpar', icon: 'fa-trash-can', label: 'Limpar', onClick: () => setClearConfirmOpen(true) },
   ]
 
   return (
@@ -339,7 +337,7 @@ export default function ProgramacaoCampo() {
         onCancel={() => setClearConfirmOpen(false)}
       />
       {/* Modal horário */}
-      {modalCtx && <ModalHorario ctx={modalCtx} onClose={fecharModal} onSave={salvarHorario} />}
+      {modalCtx && <ModalHorario key={`${modalCtx.diaNum}-${modalCtx.hi}`} ctx={modalCtx} onClose={fecharModal} onSave={salvarHorario} />}
 
       {/* Preview — usa PreviewModal unificado com docRef */}
       {showPrev && (

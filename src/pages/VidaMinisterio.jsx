@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Toast from '../components/ui/Toast'
 import PageHeader from '../components/ui/PageHeader'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
@@ -15,11 +15,13 @@ import vidaImg  from '../assets/images/vida.jpg'
 
 const LS_KEY = 'viministerio_v2'
 
-/* ─── Utilitários ─────────────────────────────────────── */
-function escH(s) {
-  return (s || '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const getInitialData = () => {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
 }
 
 /* ─── Seção colapsável ────────────────────────────────── */
@@ -150,43 +152,49 @@ export default function VidaMinisterio() {
   const previewRef      = useRef()
   const skipAutoSaveRef = useRef(false)
 
+  const initialData = getInitialData()
+
   /* ── Estado geral ────────────────────────── */
   const [unsaved,          setUnsaved]          = useState(false)
   const [overlay,          setOverlay]          = useState({ visible: false, msg: '' })
   const [confirmOpen,      setConfirmOpen]      = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
-  const [congregacao, setCongregacao] = useState('')
-  const [semana,      setSemana]      = useState('')
-  const [presidente,  setPresidente]  = useState('')
-  const [oracao,      setOracao]      = useState('')
-  const [cantico1,    setCantico1]    = useState('')
-  const [visitaSS,    setVisitaSS]    = useState(false)
+  const [congregacao, setCongregacao] = useState(initialData?.congregacao || '')
+  const [semana,      setSemana]      = useState(initialData?.semana || '')
+  const [presidente,  setPresidente]  = useState(initialData?.presidente || '')
+  const [oracao,      setOracao]      = useState(initialData?.oracao || '')
+  const [cantico1,    setCantico1]    = useState(initialData?.cantico1 || '')
+  const [visitaSS,    setVisitaSS]    = useState(!!initialData?.visitaSS)
 
   /* Tesouros */
-  const [tes1Tema, setTes1Tema] = useState('')
-  const [tes1Resp, setTes1Resp] = useState('')
-  const [tes2Resp, setTes2Resp] = useState('')
-  const [tes3Est,  setTes3Est]  = useState('')
+  const [tes1Tema, setTes1Tema] = useState(initialData?.tes1Tema || '')
+  const [tes1Resp, setTes1Resp] = useState(initialData?.tes1Resp || '')
+  const [tes2Resp, setTes2Resp] = useState(initialData?.tes2Resp || '')
+  const [tes3Est,  setTes3Est]  = useState(initialData?.tes3Est || '')
 
   /* Faça seu Melhor */
-  const [facItems, setFacItems] = useState([])
-  const facSeedRef = useRef(0)
+  const [facItems, setFacItems] = useState(initialData?.facItems || [
+    { id: 1, tipo: 'Iniciando Conversas', tempo: '1 min', est: '', aju: '' }
+  ])
+  const facSeedRef = useRef(initialData?._facSeed || (initialData?.facItems ? 0 : 1))
   const facDragSrc = useRef(null)
 
   /* Nossa Vida Cristã */
-  const [cantico2,    setCantico2]    = useState('')
-  const [vidaItems,   setVidaItems]   = useState([])
-  const [ebcDir,      setEbcDir]      = useState('')
-  const [ebcLei,      setEbcLei]      = useState('')
-  const [vssTema,     setVssTema]     = useState('')
-  const [vssResp,     setVssResp]     = useState('')
-  const [vssTempo,    setVssTempo]    = useState('30 min')
-  const vidaSeedRef = useRef(0)
+  const [cantico2,    setCantico2]    = useState(initialData?.cantico2 || '')
+  const [vidaItems,   setVidaItems]   = useState(initialData?.vidaItems || [
+    { id: 1, tema: '', tempo: '5 min', resp: '' }
+  ])
+  const [ebcDir,      setEbcDir]      = useState(initialData?.ebcDir || '')
+  const [ebcLei,      setEbcLei]      = useState(initialData?.ebcLei || '')
+  const [vssTema,     setVssTema]     = useState(initialData?.vssTema || '')
+  const [vssResp,     setVssResp]     = useState(initialData?.vssResp || '')
+  const [vssTempo,    setVssTempo]    = useState(initialData?.vssTempo || '30 min')
+  const vidaSeedRef = useRef(initialData?._vidaSeed || (initialData?.vidaItems ? 0 : 1))
   const vidaDragSrc = useRef(null)
 
   /* Encerramento */
-  const [cantico3,    setCantico3]    = useState('')
-  const [oracaoFinal, setOracaoFinal] = useState('')
+  const [cantico3,    setCantico3]    = useState(initialData?.cantico3 || '')
+  const [oracaoFinal, setOracaoFinal] = useState(initialData?.oracaoFinal || '')
 
   const [showPreview, setShowPreview] = useState(false)
   const mark = () => setUnsaved(true)
@@ -304,17 +312,7 @@ export default function VidaMinisterio() {
     toastRef.current?.show('Formulário e histórico limpos.', 'success')
   }
 
-  /* Carrega automaticamente se houver dados salvos */
-  useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY)
-    if (raw) {
-      loadData()
-    } else {
-      addFacItem()
-      addVidaItem()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+
 
   /* Aviso ao fechar aba */
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import Toast from '../components/ui/Toast'
 import PageHeader from '../components/ui/PageHeader'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
@@ -13,6 +13,15 @@ import PreviewModal from '../components/ui/PreviewModal'
 import oradorImg from '../assets/images/orador.png'
 
 const LS_KEY = 'reu-publica-dados'
+
+const getInitialData = () => {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
 
 /* ─── Semana vazia ────────────────────────────────────── */
 function novaSemana(num) {
@@ -37,11 +46,13 @@ export default function ReuniaoPublica() {
   const previewRef = useRef()
   const skipAutoSaveRef = useRef(false)
 
-  const [congregacao, setCongregacao] = useState('')
-  const [mes,         setMes]         = useState('')
-  const [ano,         setAno]         = useState('')
-  const [semanas,     setSemanas]     = useState([novaSemana(1)])
-  const [semanaAtual, setSemanaAtual] = useState(2)
+  const initialData = getInitialData()
+
+  const [congregacao, setCongregacao] = useState(initialData?.congregacao || '')
+  const [mes,         setMes]         = useState(initialData?.mes || '')
+  const [ano,         setAno]         = useState(initialData?.ano || '')
+  const [semanas,     setSemanas]     = useState(initialData?.semanas || [novaSemana(1)])
+  const [semanaAtual, setSemanaAtual] = useState(initialData?.semanaAtual || ((initialData?.semanas?.length ?? 1) + 1))
   const [unsaved,     setUnsaved]     = useState(false)  // próximo número
   const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
   const [confirmOpen,  setConfirmOpen]  = useState(false)
@@ -66,19 +77,7 @@ export default function ReuniaoPublica() {
     filename,
   })
 
-  /* ── Carregar dados salvos na inicialização ────────── */
-  useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY)
-    if (!raw) return
-    try {
-      const d = JSON.parse(raw)
-      setCongregacao(d.congregacao || '')
-      setMes(d.mes || '')
-      setAno(d.ano || '')
-      setSemanas(d.semanas || [novaSemana(1)])
-      setSemanaAtual((d.semanas?.length ?? 1) + 1)
-    } catch { /* ignora */ }
-  }, [])
+
 
   /* ── Salvar / Carregar ───────────────────────────────── */
   function saveData() {
