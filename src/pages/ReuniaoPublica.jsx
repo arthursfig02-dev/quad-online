@@ -42,20 +42,20 @@ function TrLinha({ label, valor }) {
    PÁGINA PRINCIPAL
    ════════════════════════════════════════════════════════ */
 export default function ReuniaoPublica() {
-  const toastRef   = useRef()
+  const toastRef = useRef()
   const previewRef = useRef()
   const skipAutoSaveRef = useRef(false)
 
   const initialData = getInitialData()
 
   const [congregacao, setCongregacao] = useState(initialData?.congregacao || '')
-  const [mes,         setMes]         = useState(initialData?.mes || '')
-  const [ano,         setAno]         = useState(initialData?.ano || '')
-  const [semanas,     setSemanas]     = useState(initialData?.semanas || [novaSemana(1)])
+  const [mes, setMes] = useState(initialData?.mes || '')
+  const [ano, setAno] = useState(initialData?.ano || '')
+  const [semanas, setSemanas] = useState(initialData?.semanas || [novaSemana(1)])
   const [semanaAtual, setSemanaAtual] = useState(initialData?.semanaAtual || ((initialData?.semanas?.length ?? 1) + 1))
-  const [unsaved,     setUnsaved]     = useState(false)  // próximo número
-  const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
-  const [confirmOpen,  setConfirmOpen]  = useState(false)
+  const [unsaved, setUnsaved] = useState(false)  // próximo número
+  const [overlay, setOverlay] = useState({ visible: false, msg: '' })
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
 
@@ -66,10 +66,10 @@ export default function ReuniaoPublica() {
   useThemeLive(previewRef, 'rp')
 
   /* ── Export hook ─────────────────────────────────────── */
-  const filename = `Reunião-Pública-${(mes || 'sem-mes').toLowerCase().replace(/\s+/g,'-')}-${ano || 'sem-ano'}`
+  const filename = `Reunião-Pública-${(mes || 'sem-mes').toLowerCase().replace(/\s+/g, '-')}-${ano || 'sem-ano'}`
   const { exportPDF, exportIMG, printPreview, openPreview } = useExport(previewRef, {
     onStart: msg => setOverlay({ visible: true, msg }),
-    onEnd:   (msg, type) => { setOverlay({ visible: false, msg: '' }); toastRef.current?.show(msg, type) },
+    onEnd: (msg, type) => { setOverlay({ visible: false, msg: '' }); toastRef.current?.show(msg, type) },
     onError: msg => toastRef.current?.show(msg, 'error'),
     onOpenPreview: () => setShowPreview(true),
     onBeforeCapture: applyTheme,
@@ -161,13 +161,13 @@ export default function ReuniaoPublica() {
   useAutoSave(saveDataSilent, [congregacao, mes, ano, semanas, semanaAtual])
 
   const actions = [
-    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: saveData  },
-    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: loadData  },
-    { id: 'preview',  icon: 'fa-eye',              label: 'Pré-Visualizar', onClick: openPreview },
-    { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: printPreview },
-    { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: () => exportPDF('Gerando PDF…')   },
-    { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: () => exportIMG('Gerando imagem…') },
-    { id: 'limpar',   icon: 'fa-trash-can',        label: 'Limpar',         onClick: () => setClearConfirmOpen(true) },
+    { id: 'salvar', icon: 'fa-cloud-arrow-up', label: 'Salvar', onClick: saveData },
+    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar', onClick: loadData },
+    { id: 'preview', icon: 'fa-eye', label: 'Pré-Visualizar', onClick: openPreview },
+    { id: 'imprimir', icon: 'fa-print', label: 'Imprimir', onClick: printPreview },
+    { id: 'pdf', icon: 'fa-file-pdf', label: 'Baixar PDF', onClick: () => exportPDF('Gerando PDF…') },
+    { id: 'foto', icon: 'fa-image', label: 'Baixar Foto', onClick: () => exportIMG('Gerando imagem…') },
+    { id: 'limpar', icon: 'fa-trash-can', label: 'Limpar', onClick: () => setClearConfirmOpen(true) },
   ]
 
   /* ════════════════════════════════════════════════════════
@@ -199,7 +199,7 @@ export default function ReuniaoPublica() {
       <ConfirmDialog
         open={clearConfirmOpen}
         title="Limpar tudo?"
-        message="Isso vai apagar todo o formulÃ¡rio e o histÃ³rico salvo desta pÃ¡gina."
+        message="Isso vai apagar todo o formulário e o histórico salvo desta página."
         confirmLabel="Limpar tudo"
         cancelLabel="Cancelar"
         danger
@@ -209,107 +209,107 @@ export default function ReuniaoPublica() {
       <PageActionBar actions={actions} unsaved={unsaved} />
       <div className="page-wrap">
 
-      <PageHeader
-        icon="fa-person-chalkboard"
-        title="Reunião Pública"
-        subtitle="Programação mensal"
-        color="#1e3a6e"
-      />
+        <PageHeader
+          icon="fa-person-chalkboard"
+          title="Reunião Pública"
+          subtitle="Programação mensal"
+          color="#1e3a6e"
+        />
 
-      <div className="rp-layout">
-        {/* ── EDITOR ──────────────────────────────────────── */}
-        <section>
-          <article className="rp-editor">
-            {/* Cabeçalho */}
-            <div className="rp-campo">
-              <div className="rp-titu"><p>Informações Gerais</p><hr /></div>
-              <div className="rp-bloco">
-                <label>CONGREGAÇÃO</label>
-                <input type="text" placeholder="Nome da Congregação"
-                  value={congregacao} onChange={e => { setCongregacao(e.target.value); setUnsaved(true) }} />
+        <div className="rp-layout">
+          {/* ── EDITOR ──────────────────────────────────────── */}
+          <section>
+            <article className="rp-editor">
+              {/* Cabeçalho */}
+              <div className="rp-campo">
+                <div className="rp-titu"><p>Informações Gerais</p><hr /></div>
+                <div className="rp-bloco">
+                  <label>CONGREGAÇÃO</label>
+                  <input type="text" placeholder="Nome da Congregação"
+                    value={congregacao} onChange={e => { setCongregacao(e.target.value); setUnsaved(true) }} />
+                </div>
+                <div className="rp-bloco">
+                  <label>MÊS</label>
+                  <input type="text" placeholder="ex: Março"
+                    value={mes} onChange={e => { setMes(e.target.value); setUnsaved(true) }} />
+                </div>
+                <div className="rp-bloco">
+                  <label>ANO</label>
+                  <input type="text" placeholder="ex: 2026"
+                    value={ano} onChange={e => { setAno(e.target.value); setUnsaved(true) }} />
+                </div>
               </div>
-              <div className="rp-bloco">
-                <label>MÊS</label>
-                <input type="text" placeholder="ex: Março"
-                  value={mes} onChange={e => { setMes(e.target.value); setUnsaved(true) }} />
-              </div>
-              <div className="rp-bloco">
-                <label>ANO</label>
-                <input type="text" placeholder="ex: 2026"
-                  value={ano} onChange={e => { setAno(e.target.value); setUnsaved(true) }} />
-              </div>
-            </div>
 
-            {/* Dias */}
-            <div style={{ marginTop: 15 }}>
-              <div className="rp-titu"><p>Dia</p><hr /></div>
-              {semanas.map(s => (
-                <div key={s.num} className="rp-campo">
-                  <div className="rp-titu" style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <p>Dia {s.num}</p>
-                    {semanas.length > 1 && (
-                      <button className="rp-btn-remove" onClick={() => removerSemana(s.num)}>✕ Remover</button>
-                    )}
-                  </div>
-                  {[
-                    ['data',        'DATA | TÍTULO DO DIA', 'ex: 03/03 - 09/03'],
-                    ['presidente',  'PRESIDENTE',              'Nome'],
-                    ['orador',      'ORADOR',                  'Nome'],
-                    ['congregacao', 'CONGREGAÇÃO DO ORADOR',   'Nome'],
-                    ['tema',        'TEMA',                    'Tema do discurso'],
-                    ['leitor',      'LEITOR',                  'Nome'],
-                    ['orafinal',    'ORAÇÃO FINAL',            'Nome'],
-                  ].map(([campo, label, placeholder]) => (
-                    <div className="rp-bloco" key={campo}>
-                      <label>{label}</label>
-                      <input type="text" placeholder={placeholder}
-                        value={s[campo]}
-                        onChange={e => atualizarSemana(s.num, campo, e.target.value)} />
+              {/* Dias */}
+              <div style={{ marginTop: 15 }}>
+                <div className="rp-titu"><p>Dia</p><hr /></div>
+                {semanas.map(s => (
+                  <div key={s.num} className="rp-campo">
+                    <div className="rp-titu" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p>Dia {s.num}</p>
+                      {semanas.length > 1 && (
+                        <button className="rp-btn-remove" onClick={() => removerSemana(s.num)}>✕ Remover</button>
+                      )}
                     </div>
-                  ))}
+                    {[
+                      ['data', 'DATA | TÍTULO DO DIA', 'ex: 03/03 - 09/03'],
+                      ['presidente', 'PRESIDENTE', 'Nome'],
+                      ['orador', 'ORADOR', 'Nome'],
+                      ['congregacao', 'CONGREGAÇÃO DO ORADOR', 'Nome'],
+                      ['tema', 'TEMA', 'Tema do discurso'],
+                      ['leitor', 'LEITOR', 'Nome'],
+                      ['orafinal', 'ORAÇÃO FINAL', 'Nome'],
+                    ].map(([campo, label, placeholder]) => (
+                      <div className="rp-bloco" key={campo}>
+                        <label>{label}</label>
+                        <input type="text" placeholder={placeholder}
+                          value={s[campo]}
+                          onChange={e => atualizarSemana(s.num, campo, e.target.value)} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                  <button className="rp-btn-add-sem" onClick={adicionarSemana}>+ Adicionar Dia</button>
                 </div>
-              ))}
-              <div style={{ display:'flex', justifyContent:'flex-end', marginTop:12 }}>
-                <button className="rp-btn-add-sem" onClick={adicionarSemana}>+ Adicionar Dia</button>
+              </div>
+            </article>
+          </section>
+
+          {/* ── PREVIEW ─────────────────────────────────────── */}
+          <section className="rp-previsu" ref={previewRef}>
+            <div className="rp-titu-prev">
+              <p className="rp-des">Programação Reunião Pública</p>
+              <div className="rp-cong-bar">Congregação: <span>{congregacao}</span></div>
+            </div>
+            <div className="rp-mes-ano">
+              <p className="rp-mes">{(mes || '').toUpperCase()}</p>
+              <p className="rp-ano">{ano}</p>
+            </div>
+            <div className="rp-img-pre">
+              <div><img src={oradorImg} alt="Orador" /></div>
+              <div className="rp-tabelas-wrapper">
+                {semanas.map(s => (
+                  <div key={s.num} style={{ marginBottom: '0.2cm' }}>
+                    <table className="rp-semanas-table">
+                      <tbody>
+                        <tr className="rp-semana-titulo">
+                          <th colSpan={99}>{s.data ? `DIA: ${s.data}` : `DIA ${s.num}`}</th>
+                        </tr>
+                        <TrLinha label="PRESIDENTE:" valor={s.presidente} />
+                        <TrLinha label="ORADOR:" valor={s.orador} />
+                        <TrLinha label="CONGREGAÇÃO:" valor={s.congregacao} />
+                        <TrLinha label="TEMA:" valor={s.tema} />
+                        <TrLinha label="LEITOR:" valor={s.leitor} />
+                        <TrLinha label="ORAÇÃO FINAL:" valor={s.orafinal} />
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
               </div>
             </div>
-          </article>
-        </section>
-
-        {/* ── PREVIEW ─────────────────────────────────────── */}
-        <section className="rp-previsu" ref={previewRef}>
-          <div className="rp-titu-prev">
-            <p className="rp-des">Programação Reunião Pública</p>
-            <div className="rp-cong-bar">Congregação: <span>{congregacao}</span></div>
-          </div>
-          <div className="rp-mes-ano">
-            <p className="rp-mes">{(mes || '').toUpperCase()}</p>
-            <p className="rp-ano">{ano}</p>
-          </div>
-          <div className="rp-img-pre">
-            <div><img src={oradorImg} alt="Orador" /></div>
-            <div className="rp-tabelas-wrapper">
-              {semanas.map(s => (
-                <div key={s.num} style={{ marginBottom: '0.2cm' }}>
-                  <table className="rp-semanas-table">
-                    <tbody>
-                      <tr className="rp-semana-titulo">
-                        <th colSpan={99}>{s.data ? `DIA: ${s.data}` : `DIA ${s.num}`}</th>
-                      </tr>
-                      <TrLinha label="PRESIDENTE:"    valor={s.presidente}  />
-                      <TrLinha label="ORADOR:"        valor={s.orador}      />
-                      <TrLinha label="CONGREGAÇÃO:"   valor={s.congregacao} />
-                      <TrLinha label="TEMA:"          valor={s.tema}        />
-                      <TrLinha label="LEITOR:"        valor={s.leitor}      />
-                      <TrLinha label="ORAÇÃO FINAL:"  valor={s.orafinal}    />
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
       </div>{/* /page-wrap */}
     </>
   )

@@ -66,28 +66,28 @@ function TrSimples({ label, valor }) {
    PÁGINA
    ════════════════════════════════════════════════════════ */
 export default function DesignacoesMecanicas() {
-  const toastRef   = useRef()
+  const toastRef = useRef()
   const previewRef = useRef()
   const skipAutoSaveRef = useRef(false)
 
   const initialData = getInitialData()
 
   const [congregacao, setCongregacao] = useState(initialData?.congregacao || '')
-  const [mes,         setMes]         = useState(initialData?.mes || '')
-  const [ano,         setAno]         = useState(initialData?.ano || '')
-  const [semanas,     setSemanas]     = useState(initialData?.semanas || [novaSemana(1)])
-  const [proxNum,     setProxNum]     = useState(initialData?.proxNum || ((initialData?.semanas?.length ?? 1) + 1))
-  const [overlay,     setOverlay]     = useState({ visible: false, msg: '' })
-  const [confirmOpen,  setConfirmOpen]  = useState(false)
+  const [mes, setMes] = useState(initialData?.mes || '')
+  const [ano, setAno] = useState(initialData?.ano || '')
+  const [semanas, setSemanas] = useState(initialData?.semanas || [novaSemana(1)])
+  const [proxNum, setProxNum] = useState(initialData?.proxNum || ((initialData?.semanas?.length ?? 1) + 1))
+  const [overlay, setOverlay] = useState({ visible: false, msg: '' })
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
-  const [unsaved,      setUnsaved]      = useState(false)
+  const [unsaved, setUnsaved] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
 
   /* inputs temporários para adicionar nomes */
   const [indInputs, setIndInputs] = useState({})
   const [volInputs, setVolInputs] = useState({})
 
-  const filename = `designacoes-mecanicas-${(mes||'sem-mes').toLowerCase()}-${ano||'sem-ano'}`
+  const filename = `designacoes-mecanicas-${(mes || 'sem-mes').toLowerCase()}-${ano || 'sem-ano'}`
   const { applyTheme, removeTheme } = useExportTheme('dm')
 
   /* ── Tema em tempo real no previsu lateral ───────────── */
@@ -95,11 +95,11 @@ export default function DesignacoesMecanicas() {
 
   const { exportPDF, exportIMG, printPreview, openPreview } = useExport(previewRef, {
     onStart: msg => setOverlay({ visible: true, msg }),
-    onEnd:   (msg, type) => { setOverlay({ visible: false, msg: '' }); toastRef.current?.show(msg, type) },
+    onEnd: (msg, type) => { setOverlay({ visible: false, msg: '' }); toastRef.current?.show(msg, type) },
     onError: msg => toastRef.current?.show(msg, 'error'),
     onOpenPreview: () => setShowPreview(true),
     onBeforeCapture: applyTheme,
-    onAfterCapture:  removeTheme,
+    onAfterCapture: removeTheme,
     filename,
   })
 
@@ -204,13 +204,13 @@ export default function DesignacoesMecanicas() {
   useAutoSave(saveDataSilent, [congregacao, mes, ano, semanas, proxNum])
 
   const actions = [
-    { id: 'salvar',   icon: 'fa-cloud-arrow-up',  label: 'Salvar',         onClick: saveData     },
-    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar',       onClick: loadData     },
-    { id: 'preview',  icon: 'fa-eye',              label: 'Pré-Visualizar', onClick: openPreview  },
-    { id: 'imprimir', icon: 'fa-print',            label: 'Imprimir',       onClick: printPreview },
-    { id: 'pdf',      icon: 'fa-file-pdf',         label: 'Baixar PDF',     onClick: () => exportPDF('Gerando PDF…')   },
-    { id: 'foto',     icon: 'fa-image',            label: 'Baixar Foto',    onClick: () => exportIMG('Gerando imagem…') },
-    { id: 'limpar',   icon: 'fa-trash-can',        label: 'Limpar',         onClick: () => setClearConfirmOpen(true) },
+    { id: 'salvar', icon: 'fa-cloud-arrow-up', label: 'Salvar', onClick: saveData },
+    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar', onClick: loadData },
+    { id: 'preview', icon: 'fa-eye', label: 'Pré-Visualizar', onClick: openPreview },
+    { id: 'imprimir', icon: 'fa-print', label: 'Imprimir', onClick: printPreview },
+    { id: 'pdf', icon: 'fa-file-pdf', label: 'Baixar PDF', onClick: () => exportPDF('Gerando PDF…') },
+    { id: 'foto', icon: 'fa-image', label: 'Baixar Foto', onClick: () => exportIMG('Gerando imagem…') },
+    { id: 'limpar', icon: 'fa-trash-can', label: 'Limpar', onClick: () => setClearConfirmOpen(true) },
   ]
 
   return (
@@ -239,7 +239,7 @@ export default function DesignacoesMecanicas() {
       <ConfirmDialog
         open={clearConfirmOpen}
         title="Limpar tudo?"
-        message="Isso vai apagar todo o formulÃ¡rio e o histÃ³rico salvo desta pÃ¡gina."
+        message="Isso vai apagar todo o formulário e o histórico salvo desta página."
         confirmLabel="Limpar tudo"
         cancelLabel="Cancelar"
         danger
@@ -249,136 +249,136 @@ export default function DesignacoesMecanicas() {
       <PageActionBar actions={actions} unsaved={unsaved} />
       <div className="page-wrap">
 
-      <PageHeader
-        icon="fa-list-check"
-        title="Designações Mecânicas"
-        subtitle="Indicadores, volantes, som e palco"
-        color="#237db1"
-      />
+        <PageHeader
+          icon="fa-list-check"
+          title="Designações Mecânicas"
+          subtitle="Indicadores, volantes, som e palco"
+          color="#237db1"
+        />
 
-      <div className="dm-layout">
-        {/* ── EDITOR ── */}
-        <section>
-          <article className="dm-editor">
-            <div className="dm-campo">
-              <div className="dm-titu"><p>Informações Gerais</p><hr /></div>
-              {[
-                ['CONGREGAÇÃO', congregacao, setCongregacao, 'Nome da Congregação'],
-                ['MÊS',         mes,         setMes,         'ex: Março'],
-                ['ANO',         ano,         setAno,         'ex: 2026'],
-              ].map(([label, val, setVal, ph]) => (
-                <div className="dm-bloco" key={label}>
-                  <label>{label}</label>
-                  <input type="text" placeholder={ph} value={val}
-                    onChange={e => { setVal(e.target.value); setUnsaved(true) }} />
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 15 }}>
-              <div className="dm-titu"><p>Semanas</p><hr /></div>
-
-              <div className="dm-semanas-form">
-              {semanas.map(s => (
-                <div key={s.num} className="dm-campo dm-semana-form">
-                  <div className="dm-titu" style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <p>Semana {s.num}</p>
-                    {semanas.length > 1 && (
-                      <button className="dm-btn-remove" onClick={() => removerSemana(s.num)}>✕ Remover</button>
-                    )}
+        <div className="dm-layout">
+          {/* ── EDITOR ── */}
+          <section>
+            <article className="dm-editor">
+              <div className="dm-campo">
+                <div className="dm-titu"><p>Informações Gerais</p><hr /></div>
+                {[
+                  ['CONGREGAÇÃO', congregacao, setCongregacao, 'Nome da Congregação'],
+                  ['MÊS', mes, setMes, 'ex: Março'],
+                  ['ANO', ano, setAno, 'ex: 2026'],
+                ].map(([label, val, setVal, ph]) => (
+                  <div className="dm-bloco" key={label}>
+                    <label>{label}</label>
+                    <input type="text" placeholder={ph} value={val}
+                      onChange={e => { setVal(e.target.value); setUnsaved(true) }} />
                   </div>
+                ))}
+              </div>
 
-                  {/* Data */}
-                  <div className="dm-bloco">
-                    <label>DATA | TÍTULO DA SEMANA</label>
-                    <input type="text" placeholder="ex: 03/03 - 09/03" value={s.data}
-                      onChange={e => atualizarSemana(s.num, 'data', e.target.value)} />
-                  </div>
+              <div style={{ marginTop: 15 }}>
+                <div className="dm-titu"><p>Semanas</p><hr /></div>
 
-                  {/* Indicadores */}
-                  <div className="dm-bloco dm-add">
-                    <label>INDICADORES</label>
-                    <input type="text" placeholder="Nome"
-                      value={indInputs[s.num] || ''}
-                      onChange={e => setIndInputs(p => ({ ...p, [s.num]: e.target.value }))}
-                      onKeyDown={e => e.key === 'Enter' && adicionarNome(s.num, 'indicadores')}
-                    />
-                    <button className="dm-btn-add-lista" onClick={() => adicionarNome(s.num, 'indicadores')}>
-                      + Adicionar Indicador
-                    </button>
-                    <div className="dm-nomes-adicionados">
-                      {s.indicadores.map((n, i) => (
-                        <NomeTag key={i} nome={n} onRemove={() => removerNome(s.num, 'indicadores', i)} />
+                <div className="dm-semanas-form">
+                  {semanas.map(s => (
+                    <div key={s.num} className="dm-campo dm-semana-form">
+                      <div className="dm-titu" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <p>Semana {s.num}</p>
+                        {semanas.length > 1 && (
+                          <button className="dm-btn-remove" onClick={() => removerSemana(s.num)}>✕ Remover</button>
+                        )}
+                      </div>
+
+                      {/* Data */}
+                      <div className="dm-bloco">
+                        <label>DATA | TÍTULO DA SEMANA</label>
+                        <input type="text" placeholder="ex: 03/03 - 09/03" value={s.data}
+                          onChange={e => atualizarSemana(s.num, 'data', e.target.value)} />
+                      </div>
+
+                      {/* Indicadores */}
+                      <div className="dm-bloco dm-add">
+                        <label>INDICADORES</label>
+                        <input type="text" placeholder="Nome"
+                          value={indInputs[s.num] || ''}
+                          onChange={e => setIndInputs(p => ({ ...p, [s.num]: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && adicionarNome(s.num, 'indicadores')}
+                        />
+                        <button className="dm-btn-add-lista" onClick={() => adicionarNome(s.num, 'indicadores')}>
+                          + Adicionar Indicador
+                        </button>
+                        <div className="dm-nomes-adicionados">
+                          {s.indicadores.map((n, i) => (
+                            <NomeTag key={i} nome={n} onRemove={() => removerNome(s.num, 'indicadores', i)} />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Volantes */}
+                      <div className="dm-bloco dm-add">
+                        <label>VOLANTES</label>
+                        <input type="text" placeholder="Nome"
+                          value={volInputs[s.num] || ''}
+                          onChange={e => setVolInputs(p => ({ ...p, [s.num]: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && adicionarNome(s.num, 'volantes')}
+                        />
+                        <button className="dm-btn-add-lista" onClick={() => adicionarNome(s.num, 'volantes')}>
+                          + Adicionar Volante
+                        </button>
+                        <div className="dm-nomes-adicionados">
+                          {s.volantes.map((n, i) => (
+                            <NomeTag key={i} nome={n} onRemove={() => removerNome(s.num, 'volantes', i)} />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Som / Palco */}
+                      {[['SOM', 'som'], ['PALCO', 'palco']].map(([lbl, campo]) => (
+                        <div className="dm-bloco" key={campo}>
+                          <label>{lbl}</label>
+                          <input type="text" placeholder="Nome" value={s[campo]}
+                            onChange={e => atualizarSemana(s.num, campo, e.target.value)} />
+                        </div>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Volantes */}
-                  <div className="dm-bloco dm-add">
-                    <label>VOLANTES</label>
-                    <input type="text" placeholder="Nome"
-                      value={volInputs[s.num] || ''}
-                      onChange={e => setVolInputs(p => ({ ...p, [s.num]: e.target.value }))}
-                      onKeyDown={e => e.key === 'Enter' && adicionarNome(s.num, 'volantes')}
-                    />
-                    <button className="dm-btn-add-lista" onClick={() => adicionarNome(s.num, 'volantes')}>
-                      + Adicionar Volante
-                    </button>
-                    <div className="dm-nomes-adicionados">
-                      {s.volantes.map((n, i) => (
-                        <NomeTag key={i} nome={n} onRemove={() => removerNome(s.num, 'volantes', i)} />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Som / Palco */}
-                  {[['SOM','som'],['PALCO','palco']].map(([lbl, campo]) => (
-                    <div className="dm-bloco" key={campo}>
-                      <label>{lbl}</label>
-                      <input type="text" placeholder="Nome" value={s[campo]}
-                        onChange={e => atualizarSemana(s.num, campo, e.target.value)} />
                     </div>
                   ))}
                 </div>
-              ))}
-              </div>
 
-              <div style={{ display:'flex', justifyContent:'flex-end', marginTop:12 }}>
-                <button className="dm-btn-add-sem" onClick={adicionarSemana}>+ Adicionar Semana</button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                  <button className="dm-btn-add-sem" onClick={adicionarSemana}>+ Adicionar Semana</button>
+                </div>
               </div>
+            </article>
+          </section>
+
+          {/* ── PREVIEW ── */}
+          <section className="dm-previsu" ref={previewRef}>
+            <div className="dm-titu-prev">
+              <p className="dm-des">Designações Mecânicas</p>
+              <div className="dm-cong-bar">Congregação: <span>{congregacao}</span></div>
             </div>
-          </article>
-        </section>
-
-        {/* ── PREVIEW ── */}
-        <section className="dm-previsu" ref={previewRef}>
-          <div className="dm-titu-prev">
-            <p className="dm-des">Designações Mecânicas</p>
-            <div className="dm-cong-bar">Congregação: <span>{congregacao}</span></div>
-          </div>
-          <div className="dm-mes-ano">
-            <p className="dm-mes">{(mes||'').toUpperCase()}</p>
-            <p className="dm-ano">{ano}</p>
-          </div>
-          <div className="dm-tabelas-wrapper">
-            {semanas.map(s => (
-              <div key={s.num} style={{ marginBottom: '0.4cm' }}>
-                <table className="dm-semanas-table">
-                  <tbody>
-                    <tr className="dm-semana-titulo">
-                      <th colSpan={99}>{s.data ? `SEMANA ${s.num}: ${s.data}` : `SEMANA ${s.num}`}</th>
-                    </tr>
-                    <TrNomes  label="INDICADORES:" nomes={s.indicadores} />
-                    <TrNomes  label="VOLANTES:"    nomes={s.volantes}    />
-                    <TrSimples label="SOM:"   valor={s.som}   />
-                    <TrSimples label="PALCO:" valor={s.palco} />
-                  </tbody>
-                </table>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+            <div className="dm-mes-ano">
+              <p className="dm-mes">{(mes || '').toUpperCase()}</p>
+              <p className="dm-ano">{ano}</p>
+            </div>
+            <div className="dm-tabelas-wrapper">
+              {semanas.map(s => (
+                <div key={s.num} style={{ marginBottom: '0.4cm' }}>
+                  <table className="dm-semanas-table">
+                    <tbody>
+                      <tr className="dm-semana-titulo">
+                        <th colSpan={99}>{s.data ? `SEMANA ${s.num}: ${s.data}` : `SEMANA ${s.num}`}</th>
+                      </tr>
+                      <TrNomes label="INDICADORES:" nomes={s.indicadores} />
+                      <TrNomes label="VOLANTES:" nomes={s.volantes} />
+                      <TrSimples label="SOM:" valor={s.som} />
+                      <TrSimples label="PALCO:" valor={s.palco} />
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>{/* /page-wrap */}
     </>
   )
