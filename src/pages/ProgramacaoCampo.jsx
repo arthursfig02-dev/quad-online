@@ -31,12 +31,21 @@ function gerarSemanas(ano, mes) {
 }
 
 /* ── Modal de horário ── */
-function ModalHorario({ ctx, onClose, onSave }) {
+function ModalHorario({ ctx, onClose, onSave, ano, mes }) {
   const [horario, setHorario] = useState(ctx?.dado?.horario || '')
   const [local, setLocal] = useState(ctx?.dado?.local || '')
   const [dirigente, setDirigente] = useState(ctx?.dado?.dirigente || '')
+  const [replicar, setReplicar] = useState(false)
 
   if (!ctx) return null
+
+  const date = new Date(ano, mes, ctx.diaNum)
+  const jsDay = date.getDay()
+  const idx = diaSemanaIdx(jsDay)
+  const nomeDia = DIAS_FULL[idx]
+
+  const totalDias = new Date(ano, mes + 1, 0).getDate()
+  const temProximos = ctx.diaNum + 7 <= totalDias
 
   return (
     <div className="pc-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -52,8 +61,19 @@ function ModalHorario({ ctx, onClose, onSave }) {
         <div className="pc-campo"><label>Dirigente</label>
           <input type="text" placeholder="Nome do dirigente" value={dirigente} onChange={e => setDirigente(e.target.value)} />
         </div>
+        {temProximos && (
+          <div className="pc-campo-checkbox">
+            <input
+              type="checkbox"
+              id="replicar-checkbox"
+              checked={replicar}
+              onChange={e => setReplicar(e.target.checked)}
+            />
+            <label htmlFor="replicar-checkbox">Replicar para as próximas {nomeDia}s do mês</label>
+          </div>
+        )}
         <div className="pc-modal-acoes">
-          <button className="pc-btn-aplicar" onClick={() => onSave({ horario, local, dirigente })}>Aplicar</button>
+          <button className="pc-btn-aplicar" onClick={() => onSave({ horario, local, dirigente }, replicar)}>Aplicar</button>
           <button className="pc-btn-cancelar" onClick={onClose}>Cancelar</button>
         </div>
       </div>
@@ -120,13 +140,38 @@ export default function ProgramacaoCampo() {
   function abrirModal(diaNum, hi, dado) { setModalCtx({ diaNum, hi, dado }) }
   function fecharModal() { setModalCtx(null) }
 
-  function salvarHorario(novoDado) {
+  function salvarHorario(novoDado, replicar) {
     setDados(prev => {
       const next = { ...prev }
-      const lista = [...(next[modalCtx.diaNum] || [])]
-      if (modalCtx.hi === null) lista.push(novoDado)
-      else lista[modalCtx.hi] = novoDado
-      next[modalCtx.diaNum] = lista
+      if (replicar) {
+        const totalDias = new Date(anoAtual, mesAtual + 1, 0).getDate()
+        for (let d = modalCtx.diaNum; d <= totalDias; d += 7) {
+          const lista = [...(next[d] || [])]
+          if (d === modalCtx.diaNum) {
+            if (modalCtx.hi === null) {
+              lista.push(novoDado)
+            } else {
+              lista[modalCtx.hi] = novoDado
+            }
+          } else {
+            if (modalCtx.hi === null) {
+              lista.push({ ...novoDado })
+            } else {
+              if (modalCtx.hi < lista.length) {
+                lista[modalCtx.hi] = { ...novoDado }
+              } else {
+                lista.push({ ...novoDado })
+              }
+            }
+          }
+          next[d] = lista
+        }
+      } else {
+        const lista = [...(next[modalCtx.diaNum] || [])]
+        if (modalCtx.hi === null) lista.push(novoDado)
+        else lista[modalCtx.hi] = novoDado
+        next[modalCtx.diaNum] = lista
+      }
       salvarLS(next, destaques, obs, congreg)
       return next
     })
@@ -307,6 +352,106 @@ export default function ProgramacaoCampo() {
     } catch { toastRef.current?.show('Erro ao imprimir.', 'error') }
   }
 
+  const capturarSemanaDoc = useCallback(async (si) => {
+    const el = document.getElementById(`pc-semana-documento-exportavel-${si}`)
+    if (!el) throw new Error(`Documento da semana ${si} não encontrado`)
+
+    // Revela o elemento mantendo-o no wrapper original
+    el.style.visibility = 'visible'
+    el.style.position = 'relative'
+
+    // Injeta tema antes da captura
+    applyTheme(el)
+
+    // Aguarda dois frames + delay para layout estabilizar
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+    await new Promise(r => setTimeout(r, 800))
+
+    let canvas
+    try {
+      canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+        width: 794,
+      })
+    } finally {
+      // Remove tema e esconde de volta
+      removeTheme(el)
+      el.style.visibility = 'hidden'
+      el.style.position = 'absolute'
+    }
+
+    return canvas
+  }, [applyTheme, removeTheme])
+
+  async function exportarSemanaPDF(si) {
+    setOverlay({ visible: true, msg: 'Gerando PDF da semana…' })
+    try {
+      const canvas = await capturarSemanaDoc(si)
+      const widthMm = (canvas.width * 25.4) / 96
+      const heightMm = (canvas.height * 25.4) / 96
+      const pdf = new jsPDF({
+        orientation: widthMm > heightMm ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: [widthMm, heightMm]
+      })
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, widthMm, heightMm)
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      const fileName = `semana-${si + 1}-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.pdf`
+      if (isMobile) {
+        const blob = pdf.output('blob')
+        const file = new File([blob], fileName, { type: 'application/pdf' })
+        let shared = false
+        if (navigator.canShare?.({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: `Semana ${si + 1} - Programação de Campo` }); shared = true }
+          catch { /* cancelado */ }
+        }
+        if (!shared) _blobDownload(blob, fileName)
+      } else {
+        pdf.save(fileName)
+      }
+      toastRef.current?.show('✔ PDF da semana exportado!', 'success')
+    } catch (e) {
+      console.error(e)
+      toastRef.current?.show('Erro ao gerar PDF da semana.', 'error')
+    }
+    setOverlay({ visible: false, msg: '' })
+  }
+
+  async function exportarSemanaIMG(si) {
+    setOverlay({ visible: true, msg: 'Gerando imagem da semana…' })
+    try {
+      const canvas = await capturarSemanaDoc(si)
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      const blob = await new Promise((res, rej) =>
+        canvas.toBlob(b => b ? res(b) : rej(new Error('toBlob falhou')), 'image/jpeg', 0.95)
+      )
+      const name = `semana-${si + 1}-campo-${MESES_NOMES[mesAtual].toLowerCase()}-${anoAtual}.jpg`
+      const file = new File([blob], name, { type: 'image/jpeg' })
+
+      if (isMobile) {
+        let shared = false
+        if (navigator.canShare?.({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: `Semana ${si + 1} - Programação de Campo` }); shared = true }
+          catch { /* cancelado */ }
+        }
+        if (!shared) _blobDownload(blob, name)
+      } else {
+        _blobDownload(blob, name)
+      }
+      toastRef.current?.show('✔ Imagem da semana exportada!', 'success')
+    } catch (e) {
+      console.error(e)
+      toastRef.current?.show('Erro ao gerar imagem da semana.', 'error')
+    }
+    setOverlay({ visible: false, msg: '' })
+  }
+
   const semanas = gerarSemanas(anoAtual, mesAtual)
 
   const actions = [
@@ -337,7 +482,7 @@ export default function ProgramacaoCampo() {
         onCancel={() => setClearConfirmOpen(false)}
       />
       {/* Modal horário */}
-      {modalCtx && <ModalHorario key={`${modalCtx.diaNum}-${modalCtx.hi}`} ctx={modalCtx} onClose={fecharModal} onSave={salvarHorario} />}
+      {modalCtx && <ModalHorario key={`${modalCtx.diaNum}-${modalCtx.hi}`} ctx={modalCtx} ano={anoAtual} mes={mesAtual} onClose={fecharModal} onSave={salvarHorario} />}
 
       {/* Preview — usa PreviewModal unificado com docRef */}
       {showPrev && (
@@ -393,13 +538,23 @@ export default function ProgramacaoCampo() {
                 const ate = diasValidos[diasValidos.length - 1]
                 return (
                   <div key={si} className="pc-semana-bloco">
-                    <div className="pc-semana-header">
-                      <span>Semana {si + 1}</span>
-                      <span className="pc-semana-datas">
-                        {de ? `${de}/${mesAtual + 1}` : ''}
-                        {de && ate ? ' — ' : ''}
-                        {ate ? `${ate}/${mesAtual + 1}` : ''}
-                      </span>
+                    <div className="pc-semana-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>Semana {si + 1}</span>
+                        <span className="pc-semana-datas">
+                          {de ? `${de}/${mesAtual + 1}` : ''}
+                          {de && ate ? ' — ' : ''}
+                          {ate ? `${ate}/${mesAtual + 1}` : ''}
+                        </span>
+                      </div>
+                      <div className="pc-semana-export-acoes" style={{ display: 'flex', gap: '0.4rem' }}>
+                        <button className="pc-semana-btn-export" title="Exportar PDF da Semana" onClick={() => exportarSemanaPDF(si)}>
+                          <i className="fa-solid fa-file-pdf"></i> PDF
+                        </button>
+                        <button className="pc-semana-btn-export" title="Exportar Foto da Semana" onClick={() => exportarSemanaIMG(si)}>
+                          <i className="fa-solid fa-image"></i> Foto
+                        </button>
+                      </div>
                     </div>
                     <div className="pc-dias-grid-wrap">
                       <div className="pc-dias-grid">
@@ -514,6 +669,76 @@ export default function ProgramacaoCampo() {
           </table>
         </div>
       </div>
+
+      {/* Documentos semanais para exportação — fora da tela */}
+      <div
+        style={{
+          position: 'fixed', top: 0, left: '-9999px',
+          width: '794px', background: '#fff',
+          zIndex: -9999, pointerEvents: 'none', overflow: 'visible',
+        }}
+      >
+        {semanas.map((semana, si) => {
+          const diasValidos = semana.filter(d => d !== null)
+          const de = diasValidos[0]
+          const ate = diasValidos[diasValidos.length - 1]
+          return (
+            <div
+              key={si}
+              id={`pc-semana-documento-exportavel-${si}`}
+              className="pc-semana-doc-exportavel"
+              style={{ visibility: 'hidden', position: 'absolute' }}
+            >
+              <div className="pc-doc-cabecalho">
+                <div className="pc-doc-ano-mes">
+                  <span className="pc-doc-ano">{anoAtual}</span>
+                  <span className="pc-doc-mes">{MESES_NOMES[mesAtual]}</span>
+                </div>
+                <div className="pc-doc-porcon">
+                  <h2>Programação Semanal de Campo</h2>
+                  <div className="pc-doc-semana-info" style={{ fontSize: '11px', fontWeight: 'bold', color: '#3b2d25', marginTop: '2px' }}>
+                    Semana {si + 1} {de ? `(${de}/${mesAtual + 1}${ate ? ` — ${ate}/${mesAtual + 1}` : ''})` : ''}
+                  </div>
+                  <div className="pc-doc-cong">{congreg || '—'}</div>
+                </div>
+              </div>
+              <table className="pc-doc-tabela">
+                <thead>
+                  <tr>{DIAS_FULL.map(d => <th key={d}>{d}</th>)}</tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {semana.map((diaNum, di) => {
+                      if (diaNum === null) return <td key={di} className="pc-doc-td-vazio" />
+                      const hs = dados[diaNum] || []
+                      const dest = !!destaques[diaNum]
+                      const obsV = obs[diaNum] || ''
+                      return (
+                        <td key={di}
+                          style={dest ? { background: '#fff8e1', border: '2px solid #e6a817' } : {}}>
+                          <span className={`pc-doc-dia-num${dest ? ' pc-doc-dia-num-dest' : ''}`}>{diaNum}</span>
+                          {obsV && <div className="pc-doc-obs">{obsV}</div>}
+                          {hs.map((h, hi) => (
+                            <div key={hi} className="pc-doc-horario-entry"
+                              style={{ background: CORES_BG[hi % 5] }}>
+                              <span className="pc-dh-label">Horário:</span>
+                              <span className="pc-dh-val">{h.horario}</span>
+                              <span className="pc-dh-label">Local:</span>
+                              <span className="pc-dh-val">{h.local}</span>
+                              <span className="pc-dh-label">Dirigente:</span>
+                              <span className="pc-dh-val">{h.dirigente}</span>
+                            </div>
+                          ))}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )
+        })}
+      </div>
     </>
   )
 }
@@ -582,6 +807,9 @@ const PC_STYLES = `
   .pc-modal h3 { font-size:1.3rem; color:#1c1410; margin-bottom:.3rem; }
   .pc-modal-sub { font-size:.78rem; color:#7a6a62; margin-bottom:1.2rem; }
   .pc-modal .pc-campo { margin-bottom:.85rem; }
+  .pc-campo-checkbox { display:flex; align-items:center; gap:.5rem; margin-bottom:.85rem; }
+  .pc-campo-checkbox label { font-size:.85rem; color:#1c1410; cursor:pointer; }
+  .pc-campo-checkbox input[type=checkbox] { accent-color:#8b5e3c; width:16px; height:16px; cursor:pointer; }
   .pc-modal-acoes { display:flex; gap:.75rem; margin-top:1.2rem; }
   .pc-btn-aplicar  { flex:1; padding:.7rem; border:none; border-radius:7px; font-size:.9rem; font-weight:500; cursor:pointer; background:#4a6b4a; color:#fff; }
   .pc-btn-aplicar:hover { background:#3a5a3a; }
@@ -606,6 +834,10 @@ const PC_STYLES = `
   .pc-doc-horario-entry:first-child { border-top:none; }
   .pc-dh-label { font-size:9px; color:#888; display:block; }
   .pc-dh-val   { font-size:11px; color:#111; font-weight:bold; display:block; line-height:1.3; }
+  .pc-semana-btn-export { background:rgba(255,255,255,0.15); border:none; border-radius:4px; color:#f5f0eb; font-size:0.72rem; font-weight:500; padding:0.25rem 0.5rem; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:background 0.15s, transform 0.1s; }
+  .pc-semana-btn-export:hover { background:rgba(255,255,255,0.3); }
+  .pc-semana-btn-export:active { transform:scale(0.95); }
+  .pc-semana-doc-exportavel { width:794px; background:#fff; padding:18px 22px; font-family:Arial,sans-serif; overflow:hidden; display:flex; flex-direction:column; flex-shrink:0; box-sizing:border-box; }
   @media (max-width: 699px) {
     .pc-app {
       padding-top: 2px;
