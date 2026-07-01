@@ -120,6 +120,17 @@ function getPrintCSS(module) {
     }
     .pc-dh-label { color: #555 !important; }
     .pc-dh-val   { color: #000 !important; }
+    .pc-doc-semana-obs {
+      background: #fff !important;
+      border: 1px solid #666 !important;
+    }
+    .pc-doc-semana-obs-titulo {
+      color: #000 !important;
+      border-bottom: 1px solid #666 !important;
+    }
+    .pc-doc-semana-obs-conteudo {
+      color: #000 !important;
+    }
   `
 
   return ''
@@ -219,6 +230,17 @@ function getColorCSS(module, color) {
     .pc-doc-obs {
       background: ${colorLight} !important;
       border-left-color: ${color} !important;
+    }
+    .pc-doc-semana-obs {
+      background: ${colorLight} !important;
+      border: 1px solid ${color} !important;
+    }
+    .pc-doc-semana-obs-titulo {
+      color: ${color} !important;
+      border-bottom: 1px solid ${color} !important;
+    }
+    .pc-doc-semana-obs-conteudo {
+      color: #111 !important;
     }
   `
 

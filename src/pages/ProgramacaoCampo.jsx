@@ -98,6 +98,7 @@ export default function ProgramacaoCampo() {
   const [dados, setDados] = useState({})
   const [destaques, setDestaques] = useState({})
   const [obs, setObs] = useState({})
+  const [obsSemanas, setObsSemanas] = useState({})
   const [modalCtx, setModalCtx] = useState(null)
   const [showPrev, setShowPrev] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
@@ -107,17 +108,24 @@ export default function ProgramacaoCampo() {
   function chaveLS(ano = anoAtual, mes = mesAtual) {
     return `programacao-campo:${ano}-${mes}`
   }
-  function salvarLS(d = dados, dest = destaques, o = obs, cong = congreg) {
+  function salvarLS(d = dados, dest = destaques, o = obs, cong = congreg, obsS = obsSemanas) {
     localStorage.setItem(chaveLS(), JSON.stringify({
-      dados: d, diasDestacados: dest, observacoes: o, congregacao: cong,
+      dados: d, diasDestacados: dest, observacoes: o, congregacao: cong, obsSemanas: obsS,
     }))
   }
   function carregarLS(ano = anoAtual, mes = mesAtual) {
     try {
       const raw = localStorage.getItem(chaveLS(ano, mes))
-      if (!raw) return { dados: {}, diasDestacados: {}, observacoes: {}, congregacao: '' }
-      return JSON.parse(raw)
-    } catch { return { dados: {}, diasDestacados: {}, observacoes: {}, congregacao: '' } }
+      if (!raw) return { dados: {}, diasDestacados: {}, observacoes: {}, congregacao: '', obsSemanas: {} }
+      const parsed = JSON.parse(raw)
+      return {
+        dados: parsed.dados || {},
+        diasDestacados: parsed.diasDestacados || {},
+        observacoes: parsed.observacoes || {},
+        congregacao: parsed.congregacao || '',
+        obsSemanas: parsed.obsSemanas || {},
+      }
+    } catch { return { dados: {}, diasDestacados: {}, observacoes: {}, congregacao: '', obsSemanas: {} } }
   }
 
   useEffect(() => {
@@ -126,6 +134,7 @@ export default function ProgramacaoCampo() {
     setDestaques(d.diasDestacados || {})
     setObs(d.observacoes || {})
     setCongr(d.congregacao || '')
+    setObsSemanas(d.obsSemanas || {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anoAtual, mesAtual])
 
@@ -133,7 +142,7 @@ export default function ProgramacaoCampo() {
   function trocarMes(novoAno, novoMes) {
     setAnoAtual(novoAno)
     setMesAtual(novoMes)
-    setDados({}); setDestaques({}); setObs({}); setCongr('')
+    setDados({}); setDestaques({}); setObs({}); setCongr(''); setObsSemanas({})
   }
 
   /* ── horários ── */
@@ -201,6 +210,13 @@ export default function ProgramacaoCampo() {
       return next
     })
   }
+  function atualizarObsSemana(semanaIdx, valor) {
+    setObsSemanas(prev => {
+      const next = { ...prev, [semanaIdx]: valor }
+      salvarLS(dados, destaques, obs, congreg, next)
+      return next
+    })
+  }
   function atualizarCongr(val) {
     setCongr(val)
     salvarLS(dados, destaques, obs, val)
@@ -217,6 +233,7 @@ export default function ProgramacaoCampo() {
     setDestaques(d.diasDestacados || {})
     setObs(d.observacoes || {})
     setCongr(d.congregacao || '')
+    setObsSemanas(d.obsSemanas || {})
     toastRef.current?.show('📂 Dados carregados!', 'info')
   }
 
@@ -227,6 +244,7 @@ export default function ProgramacaoCampo() {
     setDestaques({})
     setObs({})
     setCongr('')
+    setObsSemanas({})
     setClearConfirmOpen(false)
     toastRef.current?.show('Formulário e histórico limpos.', 'success')
   }
@@ -600,6 +618,17 @@ export default function ProgramacaoCampo() {
                         })}
                       </div>
                     </div>
+                    <div className="pc-semana-obs-semana-wrap">
+                      <div className="pc-campo">
+                        <label>Observação da Semana {si + 1}</label>
+                        <textarea
+                          className="pc-semana-obs-semana-textarea"
+                          placeholder="Digite observações para esta semana (exibidas apenas na exportação desta semana)..."
+                          value={obsSemanas[si] || ''}
+                          onChange={e => atualizarObsSemana(si, e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )
               })}
@@ -735,6 +764,12 @@ export default function ProgramacaoCampo() {
                   </tr>
                 </tbody>
               </table>
+              {obsSemanas[si] && (
+                <div className="pc-doc-semana-obs">
+                  <div className="pc-doc-semana-obs-titulo">Observações da Semana</div>
+                  <div className="pc-doc-semana-obs-conteudo">{obsSemanas[si]}</div>
+                </div>
+              )}
             </div>
           )
         })}
@@ -838,6 +873,53 @@ const PC_STYLES = `
   .pc-semana-btn-export:hover { background:rgba(255,255,255,0.3); }
   .pc-semana-btn-export:active { transform:scale(0.95); }
   .pc-semana-doc-exportavel { width:794px; background:#fff; padding:18px 22px; font-family:Arial,sans-serif; overflow:hidden; display:flex; flex-direction:column; flex-shrink:0; box-sizing:border-box; }
+  .pc-semana-obs-semana-wrap {
+    padding: .75rem;
+    background: #f7f3f0;
+    border-top: 1px solid #d5c8c0;
+  }
+  .pc-semana-obs-semana-textarea {
+    background: #fff;
+    border: 1px solid #d5c8c0;
+    border-radius: 7px;
+    padding: .5rem .75rem;
+    font-size: .88rem;
+    color: #1c1410;
+    width: 100%;
+    min-height: 48px;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color .15s;
+    font-family: inherit;
+  }
+  .pc-semana-obs-semana-textarea:focus {
+    outline: none;
+    border-color: #8b5e3c;
+    box-shadow: 0 0 0 3px rgba(139,94,60,.12);
+  }
+  .pc-doc-semana-obs {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid black;
+    background: #fdfbf7;
+    border-radius: 4px;
+    text-align: left;
+  }
+  .pc-doc-semana-obs-titulo {
+    font-size: 10px;
+    font-weight: bold;
+    color: #3b2d25;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 2px;
+  }
+  .pc-doc-semana-obs-conteudo {
+    font-size: 11px;
+    color: #111;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
   @media (max-width: 699px) {
     .pc-app {
       padding-top: 2px;
