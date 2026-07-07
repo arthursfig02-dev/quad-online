@@ -1,0 +1,170 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60000;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px 24px;
+  width: min(440px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
+  text-align: center;
+  position: relative;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #9aa3c7;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.closeBtn:hover {
+  color: #1e2452;
+}
+
+.iconWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #eef2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #0e097f;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: 'Barlow', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e2452;
+  margin: 0;
+}
+
+.message {
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  color: #6f78a8;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.copySection {
+  display: flex;
+  width: 100%;
+  border: 1px solid #d7dcfa;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+  background: #fcfcff;
+}
+
+.urlInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 14px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  color: #58628f;
+  outline: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.copyBtn {
+  background: #eef2ff;
+  border: none;
+  border-left: 1px solid #d7dcfa;
+  color: #0e097f;
+  padding: 0 16px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.copyBtn:hover {
+  background: #0e097f;
+  color: #fff;
+}
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.qrBorder {
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.qrCanvas {
+  display: block;
+  max-width: 100%;
+  height: auto !important;
+}
+
+.qrLabel {
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9aa3c7;
+}
+
+.actions {
+  display: flex;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.close {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #d7dcfa;
+  border-radius: 10px;
+  background: #fff;
+  color: #58628f;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.close:hover {
+  background: #f5f6ff;
+  border-color: #a0a8e0;
+}

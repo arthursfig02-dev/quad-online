@@ -7,6 +7,8 @@ import ExportOverlay from '../components/ui/ExportOverlay'
 import PageActionBar from '../components/ui/PageActionBar'
 import { useExport } from '../hooks/useExport'
 import PreviewModal from '../components/ui/PreviewModal'
+import { checkAndImportFromUrl, generateShareUrl } from '../hooks/useUrlImport'
+import ShareModal from '../components/ui/ShareModal'
 
 /* ── Imagens (substituir pelos arquivos reais em src/assets/images/) ── */
 import tesouImg from '../assets/images/tesou.jpg'
@@ -152,6 +154,13 @@ export default function VidaMinisterio() {
   const previewRef      = useRef()
   const skipAutoSaveRef = useRef(false)
 
+  const importedRef = useRef(false)
+  if (!importedRef.current) {
+    if (checkAndImportFromUrl(LS_KEY)) {
+      importedRef.current = true
+    }
+  }
+
   const initialData = getInitialData()
 
   /* ── Estado geral ────────────────────────── */
@@ -197,6 +206,15 @@ export default function VidaMinisterio() {
   const [oracaoFinal, setOracaoFinal] = useState(initialData?.oracaoFinal || '')
 
   const [showPreview, setShowPreview] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+
+  useEffect(() => {
+    if (importedRef.current) {
+      toastRef.current?.show('📂 Dados importados via link!', 'info')
+    }
+  }, [])
+
   const mark = () => setUnsaved(true)
 
   /* ── Wrappers de setter que marcam unsaved ── */
@@ -387,10 +405,24 @@ export default function VidaMinisterio() {
   vidaItems.forEach(i => { vidaIdxMap[i.id] = idx++ })
   const ebcIdx = idx
 
+  function abrirCompartilhamento() {
+    const dadosParaSalvar = {
+      congregacao, semana, presidente, oracao, cantico1, visitaSS,
+      tes1Tema, tes1Resp, tes2Resp, tes3Est,
+      cantico2, facItems, ebcDir, ebcLei, vssTema, vssResp, vssTempo,
+      vidaItems, cantico3, oracaoFinal,
+      _facSeed: facSeedRef.current, _vidaSeed: vidaSeedRef.current,
+    }
+    const url = generateShareUrl(dadosParaSalvar)
+    setShareUrl(url)
+    setShareOpen(true)
+  }
+
   /* ── Ações da barra ──────────────────────── */
   const actions = [
     { id: 'salvar',   icon: 'fa-cloud-arrow-up',   label: 'Salvar',         onClick: saveData    },
     { id: 'carregar', icon: 'fa-cloud-arrow-down',  label: 'Carregar',       onClick: loadData    },
+    { id: 'share',    icon: 'fa-share-nodes',       label: 'Compartilhar',   onClick: abrirCompartilhamento },
     { id: 'preview',  icon: 'fa-eye',               label: 'Pré-Visualizar', onClick: openPreview },
     { id: 'imprimir', icon: 'fa-print',             label: 'Imprimir',       onClick: printPreview },
     { id: 'pdf',      icon: 'fa-file-pdf',           label: 'Baixar PDF',     onClick: () => exportPDF('Gerando PDF…')  },
@@ -436,6 +468,11 @@ export default function VidaMinisterio() {
         danger
         onConfirm={limparFormulario}
         onCancel={() => setClearConfirmOpen(false)}
+      />
+      <ShareModal
+        open={shareOpen}
+        shareUrl={shareUrl}
+        onClose={() => setShareOpen(false)}
       />
       <PageActionBar actions={actions} unsaved={unsaved} />
       <div className="page-wrap">

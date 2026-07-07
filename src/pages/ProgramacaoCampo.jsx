@@ -9,6 +9,8 @@ import PreviewModal from '../components/ui/PreviewModal'
 import { useExportTheme } from '../hooks/useExportTheme'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { checkAndImportFromUrl, generateShareUrl } from '../hooks/useUrlImport'
+import ShareModal from '../components/ui/ShareModal'
 
 const MESES_NOMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
@@ -92,8 +94,20 @@ export default function ProgramacaoCampo() {
   const { applyTheme, removeTheme } = useExportTheme('pc')   // ref para o wrapper oculto — garante devolução correta
 
   const agora = new Date()
-  const [anoAtual, setAnoAtual] = useState(agora.getFullYear())
-  const [mesAtual, setMesAtual] = useState(agora.getMonth())
+  const queryParams = new URLSearchParams(window.location.search)
+  const urlAno = queryParams.get('ano') ? parseInt(queryParams.get('ano')) : null
+  const urlMes = queryParams.get('mes') ? parseInt(queryParams.get('mes')) : null
+  
+  const targetAno = urlAno || agora.getFullYear()
+  const targetMes = urlMes || agora.getMonth()
+
+  const [imported] = useState(() => {
+    const key = `programacao-campo:${targetAno}-${targetMes}`
+    return checkAndImportFromUrl(key)
+  })
+
+  const [anoAtual, setAnoAtual] = useState(targetAno)
+  const [mesAtual, setMesAtual] = useState(targetMes)
   const [congreg, setCongr] = useState('')
   const [dados, setDados] = useState({})
   const [destaques, setDestaques] = useState({})
@@ -103,6 +117,15 @@ export default function ProgramacaoCampo() {
   const [showPrev, setShowPrev] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [overlay, setOverlay] = useState({ visible: false, msg: '' })
+
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+
+  useEffect(() => {
+    if (imported) {
+      toastRef.current?.show('📂 Dados importados via link!', 'info')
+    }
+  }, [imported])
 
   /* ── localStorage ── */
   function chaveLS(ano = anoAtual, mes = mesAtual) {
@@ -470,11 +493,25 @@ export default function ProgramacaoCampo() {
     setOverlay({ visible: false, msg: '' })
   }
 
+  function abrirCompartilhamento() {
+    const dadosParaSalvar = {
+      dados,
+      diasDestacados: destaques,
+      observacoes: obs,
+      congregacao: congreg,
+      obsSemanas
+    }
+    const url = generateShareUrl(dadosParaSalvar, { ano: anoAtual, mes: mesAtual })
+    setShareUrl(url)
+    setShareOpen(true)
+  }
+
   const semanas = gerarSemanas(anoAtual, mesAtual)
 
   const actions = [
     { id: 'salvar', icon: 'fa-cloud-arrow-up', label: 'Salvar', onClick: salvarDados },
     { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar', onClick: carregarDados },
+    { id: 'share', icon: 'fa-share-nodes', label: 'Compartilhar', onClick: abrirCompartilhamento },
     { id: 'preview', icon: 'fa-eye', label: 'Pré-Visualizar', onClick: () => setShowPrev(true) },
     { id: 'imprimir', icon: 'fa-print', label: 'Imprimir', onClick: imprimirDoc },
     { id: 'pdf', icon: 'fa-file-pdf', label: 'Baixar PDF', onClick: exportarPDF },
@@ -498,6 +535,12 @@ export default function ProgramacaoCampo() {
         danger
         onConfirm={limparFormulario}
         onCancel={() => setClearConfirmOpen(false)}
+      />
+
+      <ShareModal
+        open={shareOpen}
+        shareUrl={shareUrl}
+        onClose={() => setShareOpen(false)}
       />
       {/* Modal horário */}
       {modalCtx && <ModalHorario key={`${modalCtx.diaNum}-${modalCtx.hi}`} ctx={modalCtx} ano={anoAtual} mes={mesAtual} onClose={fecharModal} onSave={salvarHorario} />}

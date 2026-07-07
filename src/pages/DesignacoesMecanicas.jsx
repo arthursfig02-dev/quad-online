@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Toast from '../components/ui/Toast'
 import PageHeader from '../components/ui/PageHeader'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
@@ -9,6 +9,8 @@ import { useExport } from '../hooks/useExport'
 import { useExportTheme } from '../hooks/useExportTheme'
 import { useThemeLive } from '../hooks/useThemeLive'
 import PreviewModal from '../components/ui/PreviewModal'
+import { checkAndImportFromUrl, generateShareUrl } from '../hooks/useUrlImport'
+import ShareModal from '../components/ui/ShareModal'
 
 const LS_KEY = 'designacoes-mecanicas-dados'
 
@@ -70,6 +72,13 @@ export default function DesignacoesMecanicas() {
   const previewRef = useRef()
   const skipAutoSaveRef = useRef(false)
 
+  const importedRef = useRef(false)
+  if (!importedRef.current) {
+    if (checkAndImportFromUrl(LS_KEY)) {
+      importedRef.current = true
+    }
+  }
+
   const initialData = getInitialData()
 
   const [congregacao, setCongregacao] = useState(initialData?.congregacao || '')
@@ -82,6 +91,15 @@ export default function DesignacoesMecanicas() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [unsaved, setUnsaved] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+
+  useEffect(() => {
+    if (importedRef.current) {
+      toastRef.current?.show('📂 Dados importados via link!', 'info')
+    }
+  }, [])
 
   /* inputs temporários para adicionar nomes */
   const [indInputs, setIndInputs] = useState({})
@@ -197,15 +215,23 @@ export default function DesignacoesMecanicas() {
     setVolInputs({})
     setUnsaved(false)
     setClearConfirmOpen(false)
-    toastRef.current?.show('FormulÃ¡rio e histÃ³rico limpos.', 'success')
+    toastRef.current?.show('Formulário e histórico limpos.', 'success')
   }
 
   /* ── Auto-save ── */
   useAutoSave(saveDataSilent, [congregacao, mes, ano, semanas, proxNum])
 
+  function abrirCompartilhamento() {
+    const dadosParaSalvar = { congregacao, mes, ano, semanas, proxNum }
+    const url = generateShareUrl(dadosParaSalvar)
+    setShareUrl(url)
+    setShareOpen(true)
+  }
+
   const actions = [
     { id: 'salvar', icon: 'fa-cloud-arrow-up', label: 'Salvar', onClick: saveData },
     { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar', onClick: loadData },
+    { id: 'share', icon: 'fa-share-nodes', label: 'Compartilhar', onClick: abrirCompartilhamento },
     { id: 'preview', icon: 'fa-eye', label: 'Pré-Visualizar', onClick: openPreview },
     { id: 'imprimir', icon: 'fa-print', label: 'Imprimir', onClick: printPreview },
     { id: 'pdf', icon: 'fa-file-pdf', label: 'Baixar PDF', onClick: () => exportPDF('Gerando PDF…') },
@@ -245,6 +271,11 @@ export default function DesignacoesMecanicas() {
         danger
         onConfirm={limparFormulario}
         onCancel={() => setClearConfirmOpen(false)}
+      />
+      <ShareModal
+        open={shareOpen}
+        shareUrl={shareUrl}
+        onClose={() => setShareOpen(false)}
       />
       <PageActionBar actions={actions} unsaved={unsaved} />
       <div className="page-wrap">
