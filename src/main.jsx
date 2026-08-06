@@ -11,6 +11,7 @@ import VidaMinisterio        from './pages/VidaMinisterio'
 import ReuniaoPublica        from './pages/ReuniaoPublica'
 import DesignacoesMecanicas  from './pages/DesignacoesMecanicas'
 import ProgramacaoCampo      from './pages/ProgramacaoCampo'
+import ArranjoLimpeza        from './pages/ArranjoLimpeza'
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       { path: 'reuniao-publica',        element: <ReuniaoPublica />        },
       { path: 'designacoes-mecanicas',  element: <DesignacoesMecanicas />  },
       { path: 'programacao-campo',      element: <ProgramacaoCampo />      },
+      { path: 'arranjo-limpeza',        element: <ArranjoLimpeza />        },
     ],
   },
 ])

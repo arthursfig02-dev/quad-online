@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/reuniao-publica',        icon: 'fa-person-chalkboard',   label: 'Reunião Pública'       },
   { to: '/designacoes-mecanicas',  icon: 'fa-list-check',          label: 'Designações Mecânicas' },
   { to: '/programacao-campo',      icon: 'fa-calendar-days',       label: 'Programação de Campo'  },
+  { to: '/arranjo-limpeza',        icon: 'fa-broom',               label: 'Arranjo de Limpeza'    },
 ]
 
 export default function SideMenu({ open, onClose, onToggle, isMobile }) {

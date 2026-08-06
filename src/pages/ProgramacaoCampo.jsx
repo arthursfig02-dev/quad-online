@@ -557,14 +557,14 @@ export default function ProgramacaoCampo() {
       )}
 
       <div className="pc-app">
-        <aside className="pc-painel-form">
-          <PageHeader
-            icon="fa-calendar-days"
-            title="Programação de Campo"
-            subtitle="Calendário mensal de campo"
-            color="#3b2d25"
-          />
+        <PageHeader
+          icon="fa-calendar-days"
+          title="Programação de Campo"
+          subtitle="Calendário mensal de campo"
+          color="#3b2d25"
+        />
 
+        <aside className="pc-painel-form">
           <div>
             <p className="pc-secao-titulo">Informações gerais</p>
             <div className="pc-cabecalho-inputs">

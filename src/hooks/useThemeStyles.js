@@ -133,6 +133,31 @@ function getPrintCSS(module) {
     }
   `
 
+  if (module === 'al') return `
+    .al-doc-titulo {
+      color: #000 !important;
+    }
+    .al-doc-subtitulo {
+      color: #333 !important;
+    }
+    .al-cab-mes td {
+      background: #e8e8e8 !important;
+      color: #000 !important;
+      border-color: #666 !important;
+    }
+    .al-cab-col td {
+      background: #f0f0f0 !important;
+      color: #000 !important;
+      border-color: #666 !important;
+    }
+    .al-mes-bloco {
+      border-color: #666 !important;
+    }
+    .al-semanas-table td {
+      border-color: #666 !important;
+    }
+  `
+
   return ''
 }
 
@@ -241,6 +266,27 @@ function getColorCSS(module, color) {
     }
     .pc-doc-semana-obs-conteudo {
       color: #111 !important;
+    }
+  `
+
+  if (module === 'al') return `
+    .al-doc-titulo {
+      color: ${color} !important;
+    }
+    .al-cab-mes td {
+      background: ${color} !important;
+      color: #fff !important;
+    }
+    .al-cab-col td {
+      background: ${colorLight} !important;
+      color: #000 !important;
+      border-color: ${color} !important;
+    }
+    .al-mes-bloco {
+      border-color: ${color} !important;
+    }
+    .al-semanas-table td {
+      border-color: #bbb !important;
     }
   `
 

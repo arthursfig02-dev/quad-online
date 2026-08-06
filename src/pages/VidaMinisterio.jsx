@@ -630,8 +630,8 @@ export default function VidaMinisterio() {
 
           <section className="tespade">
             <div className="topo tes">
-              <img src={tesouImg} alt="Tesouros" />
-              <p>TESOUROS DA PALAVRA DE DEUS</p>
+              {/*<img src={tesouImg} alt="Tesouros" />*/}
+              <p style={{marginLeft: '15px'}}>TESOUROS DA PALAVRA DE DEUS</p>
             </div>
             <div className="bloco">
               <div className="des-res">
@@ -655,8 +655,8 @@ export default function VidaMinisterio() {
 
           <section className="fame">
             <div className="topo famemi">
-              <img src={facImg} alt="Faça seu melhor" />
-              <p>FAÇA SEU MELHOR NO MINISTÉRIO</p>
+              {/*<img src={facImg} alt="Faça seu melhor" />*/}
+              <p style={{marginLeft: '15px'}}>FAÇA SEU MELHOR NO MINISTÉRIO</p>
             </div>
             {facItems.map(item => (
               <div className="bloco" key={item.id}>
@@ -677,8 +677,8 @@ export default function VidaMinisterio() {
 
           <section className="nosvida">
             <div className="topo novida">
-              <img src={vidaImg} alt="Nossa vida cristã" />
-              <p>NOSSA VIDA CRISTÃ</p>
+              {/*<img src={vidaImg} alt="Nossa vida cristã" />*/}
+              <p style={{marginLeft: '15px'}}>NOSSA VIDA CRISTÃ</p>
             </div>
             <div className="fixo-b">
               <span>• Cântico: <span className={!cantico2 ? 'pv-empty' : ''}>{pv(cantico2)}</span></span>

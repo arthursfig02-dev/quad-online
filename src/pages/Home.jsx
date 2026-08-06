@@ -32,6 +32,13 @@ const CARDS = [
     title: 'Programação de Campo',
     desc:  'Monte o calendário mensal de campo com horários, locais e dirigentes por dia.',
   },
+  {
+    to:    '/arranjo-limpeza',
+    icon:  'fa-broom',
+    color: '#2f5c1e',
+    title: 'Arranjo de Limpeza',
+    desc:  'Gere o quadro mensal de rotação dos grupos de limpeza do Salão do Reino.',
+  },
 ]
 
 export default function Home() {
@@ -59,7 +66,7 @@ export default function Home() {
         </div>
 
         <p className={s.exportCardDesc}>
-          Aplica-se a: <strong>Reunião Pública</strong>, <strong>Designações Mecânicas</strong> e <strong>Programação de Campo</strong>.
+          Aplica-se a: <strong>Reunião Pública</strong>, <strong>Designações Mecânicas</strong>, <strong>Programação de Campo</strong> e <strong>Arranjo de Limpeza</strong>.
         </p>
 
         <div className={s.exportOptions}>
