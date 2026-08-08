@@ -12,8 +12,8 @@ import ShareModal from '../components/ui/ShareModal'
 
 /* ── Imagens (substituir pelos arquivos reais em src/assets/images/) ── */
 import tesouImg from '../assets/images/tesou.jpg'
-import facImg   from '../assets/images/fac.jpg'
-import vidaImg  from '../assets/images/vida.jpg'
+import facImg from '../assets/images/fac.jpg'
+import vidaImg from '../assets/images/vida.jpg'
 
 const LS_KEY = 'viministerio_v2'
 
@@ -61,8 +61,8 @@ function Field({ label, id, placeholder, value, onChange, type = 'text', min, ma
 
 /* ─── Card dinâmico Faça seu Melhor ──────────────────── */
 function FacCard({ item, idx, onUpdate, onRemove, onDragStart, onDragEnd, onDragOver, onDrop }) {
-  const tipos = ['Iniciando Conversas','Cultivando o Interesse','Explicando suas Crenças','Fazendo Discípulos','Discurso']
-  const tempos = ['1 min','2 min','3 min','4 min','5 min','6 min','7 min','8 min']
+  const tipos = ['Iniciando Conversas', 'Cultivando o Interesse', 'Explicando suas Crenças', 'Fazendo Discípulos', 'Discurso']
+  const tempos = ['1 min', '2 min', '3 min', '4 min', '5 min', '6 min', '7 min', '8 min']
   return (
     <div
       className="dyn-card"
@@ -109,7 +109,7 @@ function FacCard({ item, idx, onUpdate, onRemove, onDragStart, onDragEnd, onDrag
 
 /* ─── Card dinâmico Nossa Vida Cristã ────────────────── */
 function VidaCard({ item, idx, onUpdate, onRemove, onDragStart, onDragEnd, onDragOver, onDrop }) {
-  const tempos = ['4 min','5 min','6 min','7 min','8 min','9 min','10 min','15 min']
+  const tempos = ['4 min', '5 min', '6 min', '7 min', '8 min', '9 min', '10 min', '15 min']
   return (
     <div
       className="dyn-card"
@@ -150,8 +150,8 @@ function VidaCard({ item, idx, onUpdate, onRemove, onDragStart, onDragEnd, onDra
    PÁGINA PRINCIPAL
    ═══════════════════════════════════════════════════════════ */
 export default function VidaMinisterio() {
-  const toastRef        = useRef()
-  const previewRef      = useRef()
+  const toastRef = useRef()
+  const previewRef = useRef()
   const skipAutoSaveRef = useRef(false)
 
   const importedRef = useRef(false)
@@ -164,22 +164,22 @@ export default function VidaMinisterio() {
   const initialData = getInitialData()
 
   /* ── Estado geral ────────────────────────── */
-  const [unsaved,          setUnsaved]          = useState(false)
-  const [overlay,          setOverlay]          = useState({ visible: false, msg: '' })
-  const [confirmOpen,      setConfirmOpen]      = useState(false)
+  const [unsaved, setUnsaved] = useState(false)
+  const [overlay, setOverlay] = useState({ visible: false, msg: '' })
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [congregacao, setCongregacao] = useState(initialData?.congregacao || '')
-  const [semana,      setSemana]      = useState(initialData?.semana || '')
-  const [presidente,  setPresidente]  = useState(initialData?.presidente || '')
-  const [oracao,      setOracao]      = useState(initialData?.oracao || '')
-  const [cantico1,    setCantico1]    = useState(initialData?.cantico1 || '')
-  const [visitaSS,    setVisitaSS]    = useState(!!initialData?.visitaSS)
+  const [semana, setSemana] = useState(initialData?.semana || '')
+  const [presidente, setPresidente] = useState(initialData?.presidente || '')
+  const [oracao, setOracao] = useState(initialData?.oracao || '')
+  const [cantico1, setCantico1] = useState(initialData?.cantico1 || '')
+  const [visitaSS, setVisitaSS] = useState(!!initialData?.visitaSS)
 
   /* Tesouros */
   const [tes1Tema, setTes1Tema] = useState(initialData?.tes1Tema || '')
   const [tes1Resp, setTes1Resp] = useState(initialData?.tes1Resp || '')
   const [tes2Resp, setTes2Resp] = useState(initialData?.tes2Resp || '')
-  const [tes3Est,  setTes3Est]  = useState(initialData?.tes3Est || '')
+  const [tes3Est, setTes3Est] = useState(initialData?.tes3Est || '')
 
   /* Faça seu Melhor */
   const [facItems, setFacItems] = useState(initialData?.facItems || [
@@ -189,20 +189,20 @@ export default function VidaMinisterio() {
   const facDragSrc = useRef(null)
 
   /* Nossa Vida Cristã */
-  const [cantico2,    setCantico2]    = useState(initialData?.cantico2 || '')
-  const [vidaItems,   setVidaItems]   = useState(initialData?.vidaItems || [
+  const [cantico2, setCantico2] = useState(initialData?.cantico2 || '')
+  const [vidaItems, setVidaItems] = useState(initialData?.vidaItems || [
     { id: 1, tema: '', tempo: '5 min', resp: '' }
   ])
-  const [ebcDir,      setEbcDir]      = useState(initialData?.ebcDir || '')
-  const [ebcLei,      setEbcLei]      = useState(initialData?.ebcLei || '')
-  const [vssTema,     setVssTema]     = useState(initialData?.vssTema || '')
-  const [vssResp,     setVssResp]     = useState(initialData?.vssResp || '')
-  const [vssTempo,    setVssTempo]    = useState(initialData?.vssTempo || '30 min')
+  const [ebcDir, setEbcDir] = useState(initialData?.ebcDir || '')
+  const [ebcLei, setEbcLei] = useState(initialData?.ebcLei || '')
+  const [vssTema, setVssTema] = useState(initialData?.vssTema || '')
+  const [vssResp, setVssResp] = useState(initialData?.vssResp || '')
+  const [vssTempo, setVssTempo] = useState(initialData?.vssTempo || '30 min')
   const vidaSeedRef = useRef(initialData?._vidaSeed || (initialData?.vidaItems ? 0 : 1))
   const vidaDragSrc = useRef(null)
 
   /* Encerramento */
-  const [cantico3,    setCantico3]    = useState(initialData?.cantico3 || '')
+  const [cantico3, setCantico3] = useState(initialData?.cantico3 || '')
   const [oracaoFinal, setOracaoFinal] = useState(initialData?.oracaoFinal || '')
 
   const [showPreview, setShowPreview] = useState(false)
@@ -223,7 +223,7 @@ export default function VidaMinisterio() {
   /* ── Export hook ─────────────────────────── */
   const { exportPDF, exportIMG, printPreview, openPreview } = useExport(previewRef, {
     onStart: msg => setOverlay({ visible: true, msg }),
-    onEnd:   (msg, type) => {
+    onEnd: (msg, type) => {
       setOverlay({ visible: false, msg: '' })
       toastRef.current?.show(msg, type)
     },
@@ -294,7 +294,7 @@ export default function VidaMinisterio() {
     setVidaItems(d.vidaItems || [])
     setCantico3(d.cantico3 || '')
     setOracaoFinal(d.oracaoFinal || '')
-    facSeedRef.current  = d._facSeed  || 0
+    facSeedRef.current = d._facSeed || 0
     vidaSeedRef.current = d._vidaSeed || 0
     setUnsaved(false)
     toastRef.current?.show('📂 Dados carregados!', 'info')
@@ -323,7 +323,7 @@ export default function VidaMinisterio() {
     setVidaItems([])
     setCantico3('')
     setOracaoFinal('')
-    facSeedRef.current  = 0
+    facSeedRef.current = 0
     vidaSeedRef.current = 0
     setUnsaved(false)
     setClearConfirmOpen(false)
@@ -399,8 +399,8 @@ export default function VidaMinisterio() {
 
   /* ── Índices dinâmicos ───────────────────── */
   let idx = 4
-  const facIdxMap  = {}
-  facItems.forEach(i => { facIdxMap[i.id]  = idx++ })
+  const facIdxMap = {}
+  facItems.forEach(i => { facIdxMap[i.id] = idx++ })
   const vidaIdxMap = {}
   vidaItems.forEach(i => { vidaIdxMap[i.id] = idx++ })
   const ebcIdx = idx
@@ -420,14 +420,14 @@ export default function VidaMinisterio() {
 
   /* ── Ações da barra ──────────────────────── */
   const actions = [
-    { id: 'salvar',   icon: 'fa-cloud-arrow-up',   label: 'Salvar',         onClick: saveData    },
-    { id: 'carregar', icon: 'fa-cloud-arrow-down',  label: 'Carregar',       onClick: loadData    },
-    { id: 'share',    icon: 'fa-share-nodes',       label: 'Compartilhar',   onClick: abrirCompartilhamento },
-    { id: 'preview',  icon: 'fa-eye',               label: 'Pré-Visualizar', onClick: openPreview },
-    { id: 'imprimir', icon: 'fa-print',             label: 'Imprimir',       onClick: printPreview },
-    { id: 'pdf',      icon: 'fa-file-pdf',           label: 'Baixar PDF',     onClick: () => exportPDF('Gerando PDF…')  },
-    { id: 'foto',     icon: 'fa-image',              label: 'Baixar Foto',    onClick: () => exportIMG('Gerando imagem…') },
-    { id: 'limpar',   icon: 'fa-trash-can',        label: 'Limpar',         onClick: () => setClearConfirmOpen(true) },
+    { id: 'salvar', icon: 'fa-cloud-arrow-up', label: 'Salvar', onClick: saveData },
+    { id: 'carregar', icon: 'fa-cloud-arrow-down', label: 'Carregar', onClick: loadData },
+    { id: 'share', icon: 'fa-share-nodes', label: 'Compartilhar', onClick: abrirCompartilhamento },
+    { id: 'preview', icon: 'fa-eye', label: 'Pré-Visualizar', onClick: openPreview },
+    { id: 'imprimir', icon: 'fa-print', label: 'Imprimir', onClick: printPreview },
+    { id: 'pdf', icon: 'fa-file-pdf', label: 'Baixar PDF', onClick: () => exportPDF('Gerando PDF…') },
+    { id: 'foto', icon: 'fa-image', label: 'Baixar Foto', onClick: () => exportIMG('Gerando imagem…') },
+    { id: 'limpar', icon: 'fa-trash-can', label: 'Limpar', onClick: () => setClearConfirmOpen(true) },
   ]
 
   /* ── PV helper ───────────────────────────── */
@@ -477,263 +477,263 @@ export default function VidaMinisterio() {
       <PageActionBar actions={actions} unsaved={unsaved} />
       <div className="page-wrap">
 
-      <PageHeader
-        icon="fa-book"
-        title="Vida e Ministério"
-        subtitle="Reunião de meio de semana"
-        color="#0e097f"
-      />
+        <PageHeader
+          icon="fa-book"
+          title="Vida e Ministério"
+          subtitle="Reunião de meio de semana"
+          color="#0e097f"
+        />
 
-      <div className="vm-layout">
-        {/* ── EDITOR ─────────────────────────────────────────── */}
-        <div id="vi-editor">
+        <div className="vm-layout">
+          {/* ── EDITOR ─────────────────────────────────────────── */}
+          <div id="vi-editor">
 
-          {/* GERAL */}
-          <Section id="sec-geral" className="sec-geral" headerClass="" title="Informações Gerais">
-            <Field label="Congregação"       id="f-congregacao" placeholder="Nome da congregação" value={congregacao} onChange={set(setCongregacao)} />
-            <Field label="Semana | Leitura Bíblica" id="f-semana" placeholder="Ex: 10–16 fev | Gênesis 1" value={semana} onChange={set(setSemana)} />
-            <div className="field-row">
-              <Field label="Presidente"  id="f-presidente" placeholder="Nome" value={presidente} onChange={set(setPresidente)} />
-              <Field label="Oração inicial" id="f-oracao" placeholder="Nome" value={oracao} onChange={set(setOracao)} />
-            </div>
-            <div className="field-row" style={{ alignItems: 'flex-end' }}>
-              <div className="field-group narrow">
-                <label htmlFor="f-cantico1">Cântico inicial</label>
-                <input type="number" id="f-cantico1" placeholder="Nº" min="1" max="151" inputMode="numeric"
-                  value={cantico1} onChange={e => { setCantico1(e.target.value); mark() }} />
+            {/* GERAL */}
+            <Section id="sec-geral" className="sec-geral" headerClass="" title="Informações Gerais">
+              <Field label="Congregação" id="f-congregacao" placeholder="Nome da congregação" value={congregacao} onChange={set(setCongregacao)} />
+              <Field label="Semana | Leitura Bíblica" id="f-semana" placeholder="Ex: 10–16 fev | Gênesis 1" value={semana} onChange={set(setSemana)} />
+              <div className="field-row">
+                <Field label="Presidente" id="f-presidente" placeholder="Nome" value={presidente} onChange={set(setPresidente)} />
+                <Field label="Oração inicial" id="f-oracao" placeholder="Nome" value={oracao} onChange={set(setOracao)} />
               </div>
-              <div className="field-group" style={{ display:'flex', alignItems:'flex-end', justifyContent:'flex-end', paddingBottom:2 }}>
-                <label className="visita-ss-toggle" htmlFor="f-visita-ss" title="Substitui o EBC pela Visita do SC">
-                  <input type="checkbox" id="f-visita-ss" checked={visitaSS}
-                    onChange={e => { setVisitaSS(e.target.checked); mark() }} />
-                  <span className="vss-box" />
-                  <span className="vss-label">Visita SC</span>
-                </label>
-              </div>
-            </div>
-          </Section>
-
-          {/* TESOUROS */}
-          <Section id="sec-tes" className="sec-tes" title="Tesouros da Palavra de Deus">
-            <div className="sub-label">1 · Discurso (10 min)</div>
-            <Field label="Tema"         id="f-tes1-tema" placeholder="Título do discurso" value={tes1Tema} onChange={set(setTes1Tema)} />
-            <Field label="Responsável"  id="f-tes1-resp" placeholder="Nome"               value={tes1Resp} onChange={set(setTes1Resp)} />
-            <div className="sub-label">2 · Joias Espirituais (10 min)</div>
-            <Field label="Responsável"  id="f-tes2-resp" placeholder="Nome"               value={tes2Resp} onChange={set(setTes2Resp)} />
-            <div className="sub-label">3 · Leitura da Bíblia (4 min)</div>
-            <Field label="Estudante"    id="f-tes3-est"  placeholder="Nome"               value={tes3Est}  onChange={set(setTes3Est)}  />
-          </Section>
-
-          {/* FAÇ SEU MELHOR */}
-          <Section id="sec-fac" className="sec-fac" title="Faça Seu Melhor no Ministério">
-            {facItems.map(item => (
-              <FacCard key={item.id} item={item} idx={facIdxMap[item.id]}
-                onUpdate={updateFacItem}
-                onRemove={() => removeFacItem(item.id)}
-                onDragStart={() => facDragStart(item.id)}
-                onDragEnd={() => {}}
-                onDragOver={() => {}}
-                onDrop={() => facDrop(item.id)}
-              />
-            ))}
-            <button className="btn-add-item" onClick={addFacItem}>＋ Adicionar parte do ministério</button>
-          </Section>
-
-          {/* NOSSA VIDA CRISTÃ */}
-          <Section id="sec-vida" className="sec-vida" title="Nossa Vida Cristã">
-            <div className="field-row">
-              <div className="field-group narrow">
-                <label htmlFor="f-cantico2">Cântico</label>
-                <input type="number" id="f-cantico2" placeholder="Nº" min="1" max="151" inputMode="numeric"
-                  value={cantico2} onChange={e => { setCantico2(e.target.value); mark() }} />
-              </div>
-            </div>
-
-            {vidaItems.map(item => (
-              <VidaCard key={item.id} item={item} idx={vidaIdxMap[item.id]}
-                onUpdate={updateVidaItem}
-                onRemove={() => removeVidaItem(item.id)}
-                onDragStart={() => vidaDragStart(item.id)}
-                onDragEnd={() => {}}
-                onDragOver={() => {}}
-                onDrop={() => vidaDrop(item.id)}
-              />
-            ))}
-
-            {/* EBC padrão */}
-            {!visitaSS && (
-              <div id="bloco-ebc">
-                <div className="sub-label" id="vida-ebc-label">{ebcIdx} · Estudo Bíblico de Congregação (30 min)</div>
-                <div className="field-row">
-                  <Field label="Dirigente" id="f-vida-ebc-dir" placeholder="Nome" value={ebcDir} onChange={set(setEbcDir)} />
-                  <Field label="Leitor"    id="f-vida-ebc-lei" placeholder="Nome" value={ebcLei} onChange={set(setEbcLei)} />
+              <div className="field-row" style={{ alignItems: 'flex-end' }}>
+                <div className="field-group narrow">
+                  <label htmlFor="f-cantico1">Cântico inicial</label>
+                  <input type="number" id="f-cantico1" placeholder="Nº" min="1" max="151" inputMode="numeric"
+                    value={cantico1} onChange={e => { setCantico1(e.target.value); mark() }} />
+                </div>
+                <div className="field-group" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', paddingBottom: 2 }}>
+                  <label className="visita-ss-toggle" htmlFor="f-visita-ss" title="Substitui o EBC pela Visita do SC">
+                    <input type="checkbox" id="f-visita-ss" checked={visitaSS}
+                      onChange={e => { setVisitaSS(e.target.checked); mark() }} />
+                    <span className="vss-box" />
+                    <span className="vss-label">Visita SC</span>
+                  </label>
                 </div>
               </div>
-            )}
+            </Section>
 
-            {/* Visita SC */}
-            {visitaSS && (
-              <div id="bloco-vss">
-                <div className="sub-label vss-sub-label">{ebcIdx} · Visita do Superintendente de Circuito</div>
-                <Field label="Tema" id="f-vss-tema" placeholder="Título da parte" value={vssTema} onChange={set(setVssTema)} />
-                <div className="field-row">
-                  <Field label="Responsável" id="f-vss-resp" placeholder="Nome" value={vssResp} onChange={set(setVssResp)} />
-                  <div className="field-group narrow">
-                    <label htmlFor="f-vss-tempo">Tempo</label>
-                    <select id="f-vss-tempo" value={vssTempo} onChange={e => { setVssTempo(e.target.value); mark() }}>
-                      {['15 min','20 min','30 min','45 min'].map(o => <option key={o}>{o}</option>)}
-                    </select>
+            {/* TESOUROS */}
+            <Section id="sec-tes" className="sec-tes" title="Tesouros da Palavra de Deus">
+              <div className="sub-label">1 · Discurso (10 min)</div>
+              <Field label="Tema" id="f-tes1-tema" placeholder="Título do discurso" value={tes1Tema} onChange={set(setTes1Tema)} />
+              <Field label="Responsável" id="f-tes1-resp" placeholder="Nome" value={tes1Resp} onChange={set(setTes1Resp)} />
+              <div className="sub-label">2 · Joias Espirituais (10 min)</div>
+              <Field label="Responsável" id="f-tes2-resp" placeholder="Nome" value={tes2Resp} onChange={set(setTes2Resp)} />
+              <div className="sub-label">3 · Leitura da Bíblia (4 min)</div>
+              <Field label="Estudante" id="f-tes3-est" placeholder="Nome" value={tes3Est} onChange={set(setTes3Est)} />
+            </Section>
+
+            {/* FAÇ SEU MELHOR */}
+            <Section id="sec-fac" className="sec-fac" title="Faça Seu Melhor no Ministério">
+              {facItems.map(item => (
+                <FacCard key={item.id} item={item} idx={facIdxMap[item.id]}
+                  onUpdate={updateFacItem}
+                  onRemove={() => removeFacItem(item.id)}
+                  onDragStart={() => facDragStart(item.id)}
+                  onDragEnd={() => { }}
+                  onDragOver={() => { }}
+                  onDrop={() => facDrop(item.id)}
+                />
+              ))}
+              <button className="btn-add-item" onClick={addFacItem}>＋ Adicionar parte do ministério</button>
+            </Section>
+
+            {/* NOSSA VIDA CRISTÃ */}
+            <Section id="sec-vida" className="sec-vida" title="Nossa Vida Cristã">
+              <div className="field-row">
+                <div className="field-group narrow">
+                  <label htmlFor="f-cantico2">Cântico</label>
+                  <input type="number" id="f-cantico2" placeholder="Nº" min="1" max="151" inputMode="numeric"
+                    value={cantico2} onChange={e => { setCantico2(e.target.value); mark() }} />
+                </div>
+              </div>
+
+              {vidaItems.map(item => (
+                <VidaCard key={item.id} item={item} idx={vidaIdxMap[item.id]}
+                  onUpdate={updateVidaItem}
+                  onRemove={() => removeVidaItem(item.id)}
+                  onDragStart={() => vidaDragStart(item.id)}
+                  onDragEnd={() => { }}
+                  onDragOver={() => { }}
+                  onDrop={() => vidaDrop(item.id)}
+                />
+              ))}
+
+              {/* EBC padrão */}
+              {!visitaSS && (
+                <div id="bloco-ebc">
+                  <div className="sub-label" id="vida-ebc-label">{ebcIdx} · Estudo Bíblico de Congregação (30 min)</div>
+                  <div className="field-row">
+                    <Field label="Dirigente" id="f-vida-ebc-dir" placeholder="Nome" value={ebcDir} onChange={set(setEbcDir)} />
+                    <Field label="Leitor" id="f-vida-ebc-lei" placeholder="Nome" value={ebcLei} onChange={set(setEbcLei)} />
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <button className="btn-add-item" onClick={addVidaItem}>＋ Adicionar parte da vida cristã</button>
-          </Section>
+              {/* Visita SC */}
+              {visitaSS && (
+                <div id="bloco-vss">
+                  <div className="sub-label vss-sub-label">{ebcIdx} · Visita do Superintendente de Circuito</div>
+                  <Field label="Tema" id="f-vss-tema" placeholder="Título da parte" value={vssTema} onChange={set(setVssTema)} />
+                  <div className="field-row">
+                    <Field label="Responsável" id="f-vss-resp" placeholder="Nome" value={vssResp} onChange={set(setVssResp)} />
+                    <div className="field-group narrow">
+                      <label htmlFor="f-vss-tempo">Tempo</label>
+                      <select id="f-vss-tempo" value={vssTempo} onChange={e => { setVssTempo(e.target.value); mark() }}>
+                        {['15 min', '20 min', '30 min', '45 min'].map(o => <option key={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {/* ENCERRAMENTO */}
-          <Section id="sec-final" className="sec-final" title="Encerramento">
-            <div className="field-row">
-              <div className="field-group narrow">
-                <label htmlFor="f-cantico3">Cântico final</label>
-                <input type="number" id="f-cantico3" placeholder="Nº" min="1" max="151" inputMode="numeric"
-                  value={cantico3} onChange={e => { setCantico3(e.target.value); mark() }} />
+              <button className="btn-add-item" onClick={addVidaItem}>＋ Adicionar parte da vida cristã</button>
+            </Section>
+
+            {/* ENCERRAMENTO */}
+            <Section id="sec-final" className="sec-final" title="Encerramento">
+              <div className="field-row">
+                <div className="field-group narrow">
+                  <label htmlFor="f-cantico3">Cântico final</label>
+                  <input type="number" id="f-cantico3" placeholder="Nº" min="1" max="151" inputMode="numeric"
+                    value={cantico3} onChange={e => { setCantico3(e.target.value); mark() }} />
+                </div>
+                <Field label="Oração final" id="f-oracao-final" placeholder="Nome" value={oracaoFinal} onChange={set(setOracaoFinal)} />
               </div>
-              <Field label="Oração final" id="f-oracao-final" placeholder="Nome" value={oracaoFinal} onChange={set(setOracaoFinal)} />
-            </div>
-          </Section>
+            </Section>
+          </div>
+
+          {/* ── PREVIEW (fora da tela em mobile, visível em desktop) ── */}
+          <article id="vi-previsu" className="vi-previsu" ref={previewRef} aria-label="Pré-visualização da programação">
+            <section className="cabe-topo">
+              <div className="con-titu">
+                <span className={`pv-congregacao${!congregacao ? ' pv-empty' : ''}`}>{pv(congregacao, 'Congregação')}</span>
+                <p>Programação Reunião Meio de Semana</p>
+              </div>
+              <hr id="um" /><hr id="dois" />
+            </section>
+
+            <section className="introducao">
+              <div className="sm-ds">
+                <span className={`pv-semana${!semana ? ' pv-empty' : ''}`}>{pv(semana, 'Semana | Leitura')}</span>
+                <div className="ds">
+                  <span>Presidente: <span className={!presidente ? 'pv-empty' : ''}>{pv(presidente)}</span></span>
+                  <span>Oração: <span className={!oracao ? 'pv-empty' : ''}>{pv(oracao)}</span></span>
+                </div>
+              </div>
+              <div className="fixo-a">
+                <span>• Cântico: <span className={!cantico1 ? 'pv-empty' : ''}>{pv(cantico1)}</span></span>
+                <span>• Comentários Iniciais (1 min)</span>
+              </div>
+            </section>
+
+            <section className="tespade">
+              <div className="topo tes">
+                {/*<img src={tesouImg} alt="Tesouros" />*/}
+                <p style={{ marginLeft: '15px' }}>TESOUROS DA PALAVRA DE DEUS</p>
+              </div>
+              <div className="bloco">
+                <div className="des-res">
+                  <div className="des"><span className="indice">1. </span><span className={!tes1Tema ? 'pv-empty' : ''}>{pv(tes1Tema, 'Tema')}</span><span> (10 min)</span></div>
+                  <div className="resp"><span className={!tes1Resp ? 'pv-empty' : ''}>{pv(tes1Resp)}</span></div>
+                </div>
+              </div>
+              <div className="bloco">
+                <div className="des-res">
+                  <div className="des"><span className="indice">2. </span><span>Joias espirituais (10 min)</span></div>
+                  <div className="resp"><span className={!tes2Resp ? 'pv-empty' : ''}>{pv(tes2Resp)}</span></div>
+                </div>
+              </div>
+              <div className="bloco">
+                <div className="des-res">
+                  <div className="des"><span className="indice">3. </span><span>Leitura da Bíblia (4 min)</span></div>
+                  <div className="resp"><span>Estudante: </span><span className={!tes3Est ? 'pv-empty' : ''}>{pv(tes3Est)}</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section className="fame">
+              <div className="topo famemi">
+                {/*<img src={facImg} alt="Faça seu melhor" />*/}
+                <p style={{ marginLeft: '15px' }}>FAÇA SEU MELHOR NO MINISTÉRIO</p>
+              </div>
+              {facItems.map(item => (
+                <div className="bloco" key={item.id}>
+                  <div className="des-res">
+                    <div className="des">
+                      <span className="indice">{facIdxMap[item.id]}. </span>
+                      <span>{item.tipo}</span>
+                      <span> ({item.tempo})</span>
+                    </div>
+                    <div className="resp-est-aju">
+                      <span>Estudante: <span className={!item.est ? 'pv-empty' : ''}>{item.est || '—'}</span></span>
+                      <span>Ajudante: <span className={!item.aju ? 'pv-empty' : ''}>{item.aju || '—'}</span></span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section className="nosvida">
+              <div className="topo novida">
+                {/*<img src={vidaImg} alt="Nossa vida cristã" />*/}
+                <p style={{ marginLeft: '15px' }}>NOSSA VIDA CRISTÃ</p>
+              </div>
+              <div className="fixo-b">
+                <span>• Cântico: <span className={!cantico2 ? 'pv-empty' : ''}>{pv(cantico2)}</span></span>
+              </div>
+              {vidaItems.map(item => (
+                <div className="bloco" key={item.id}>
+                  <div className="des-res">
+                    <div className="des">
+                      <span className="indice">{vidaIdxMap[item.id]}. </span>
+                      <span className={!item.tema ? 'pv-empty' : ''}>{item.tema || 'Tema'}</span>
+                      <span> ({item.tempo})</span>
+                    </div>
+                    <div className="resp"><span className={!item.resp ? 'pv-empty' : ''}>{item.resp || '—'}</span></div>
+                  </div>
+                </div>
+              ))}
+              {!visitaSS && (
+                <div className="bloco">
+                  <div className="des-res">
+                    <div className="des">
+                      <span className="indice">{ebcIdx}. </span>
+                      <span>Estudo Bíblico de Congregação (30 min)</span>
+                    </div>
+                    <div className="resp-est-aju">
+                      <span>Dirigente: <span className={!ebcDir ? 'pv-empty' : ''}>{pv(ebcDir)}</span></span>
+                      <span>Leitor: <span className={!ebcLei ? 'pv-empty' : ''}>{pv(ebcLei)}</span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {visitaSS && (
+                <div className="bloco">
+                  <div className="des-res">
+                    <div className="des">
+                      <span className="indice">{ebcIdx}. </span>
+                      <span className={!vssTema ? 'pv-empty' : ''}>{pv(vssTema, 'Tema')}</span>
+                      <span> ({vssTempo})</span>
+                    </div>
+                    <div className="resp"><span className={!vssResp ? 'pv-empty' : ''}>{pv(vssResp)}</span></div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="final">
+              <div className="fixo-b">
+                <span>• Comentários Finais (1 min)</span>
+                <div className="final-bottom">
+                  <span>• Cântico: <span className={!cantico3 ? 'pv-empty' : ''}>{pv(cantico3)}</span></span>
+                  <span>Oração Final: <span className={!oracaoFinal ? 'pv-empty' : ''}>{pv(oracaoFinal)}</span></span>
+                </div>
+              </div>
+            </section>
+          </article>
         </div>
-
-        {/* ── PREVIEW (fora da tela em mobile, visível em desktop) ── */}
-        <article id="vi-previsu" className="vi-previsu" ref={previewRef} aria-label="Pré-visualização da programação">
-          <section className="cabe-topo">
-            <div className="con-titu">
-              <span className={`pv-congregacao${!congregacao ? ' pv-empty' : ''}`}>{pv(congregacao, 'Congregação')}</span>
-              <p>Programação Reunião Meio de Semana</p>
-            </div>
-            <hr id="um" /><hr id="dois" />
-          </section>
-
-          <section className="introducao">
-            <div className="sm-ds">
-              <span className={`pv-semana${!semana ? ' pv-empty' : ''}`}>{pv(semana, 'Semana | Leitura')}</span>
-              <div className="ds">
-                <span>Presidente: <span className={!presidente ? 'pv-empty' : ''}>{pv(presidente)}</span></span>
-                <span>Oração: <span className={!oracao ? 'pv-empty' : ''}>{pv(oracao)}</span></span>
-              </div>
-            </div>
-            <div className="fixo-a">
-              <span>• Cântico: <span className={!cantico1 ? 'pv-empty' : ''}>{pv(cantico1)}</span></span>
-              <span>• Comentários Iniciais (1 min)</span>
-            </div>
-          </section>
-
-          <section className="tespade">
-            <div className="topo tes">
-              {/*<img src={tesouImg} alt="Tesouros" />*/}
-              <p style={{marginLeft: '15px'}}>TESOUROS DA PALAVRA DE DEUS</p>
-            </div>
-            <div className="bloco">
-              <div className="des-res">
-                <div className="des"><span className="indice">1. </span><span className={!tes1Tema ? 'pv-empty' : ''}>{pv(tes1Tema,'Tema')}</span><span> (10 min)</span></div>
-                <div className="resp"><span className={!tes1Resp ? 'pv-empty' : ''}>{pv(tes1Resp)}</span></div>
-              </div>
-            </div>
-            <div className="bloco">
-              <div className="des-res">
-                <div className="des"><span className="indice">2. </span><span>Joias espirituais (10 min)</span></div>
-                <div className="resp"><span className={!tes2Resp ? 'pv-empty' : ''}>{pv(tes2Resp)}</span></div>
-              </div>
-            </div>
-            <div className="bloco">
-              <div className="des-res">
-                <div className="des"><span className="indice">3. </span><span>Leitura da Bíblia (4 min)</span></div>
-                <div className="resp"><span>Estudante: </span><span className={!tes3Est ? 'pv-empty' : ''}>{pv(tes3Est)}</span></div>
-              </div>
-            </div>
-          </section>
-
-          <section className="fame">
-            <div className="topo famemi">
-              {/*<img src={facImg} alt="Faça seu melhor" />*/}
-              <p style={{marginLeft: '15px'}}>FAÇA SEU MELHOR NO MINISTÉRIO</p>
-            </div>
-            {facItems.map(item => (
-              <div className="bloco" key={item.id}>
-                <div className="des-res">
-                  <div className="des">
-                    <span className="indice">{facIdxMap[item.id]}. </span>
-                    <span>{item.tipo}</span>
-                    <span> ({item.tempo})</span>
-                  </div>
-                  <div className="resp-est-aju">
-                    <span>Estudante: <span className={!item.est ? 'pv-empty' : ''}>{item.est || '—'}</span></span>
-                    <span>Ajudante: <span className={!item.aju ? 'pv-empty' : ''}>{item.aju || '—'}</span></span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <section className="nosvida">
-            <div className="topo novida">
-              {/*<img src={vidaImg} alt="Nossa vida cristã" />*/}
-              <p style={{marginLeft: '15px'}}>NOSSA VIDA CRISTÃ</p>
-            </div>
-            <div className="fixo-b">
-              <span>• Cântico: <span className={!cantico2 ? 'pv-empty' : ''}>{pv(cantico2)}</span></span>
-            </div>
-            {vidaItems.map(item => (
-              <div className="bloco" key={item.id}>
-                <div className="des-res">
-                  <div className="des">
-                    <span className="indice">{vidaIdxMap[item.id]}. </span>
-                    <span className={!item.tema ? 'pv-empty' : ''}>{item.tema || 'Tema'}</span>
-                    <span> ({item.tempo})</span>
-                  </div>
-                  <div className="resp"><span className={!item.resp ? 'pv-empty' : ''}>{item.resp || '—'}</span></div>
-                </div>
-              </div>
-            ))}
-            {!visitaSS && (
-              <div className="bloco">
-                <div className="des-res">
-                  <div className="des">
-                    <span className="indice">{ebcIdx}. </span>
-                    <span>Estudo Bíblico de Congregação (30 min)</span>
-                  </div>
-                  <div className="resp-est-aju">
-                    <span>Dirigente: <span className={!ebcDir ? 'pv-empty' : ''}>{pv(ebcDir)}</span></span>
-                    <span>Leitor: <span className={!ebcLei ? 'pv-empty' : ''}>{pv(ebcLei)}</span></span>
-                  </div>
-                </div>
-              </div>
-            )}
-            {visitaSS && (
-              <div className="bloco">
-                <div className="des-res">
-                  <div className="des">
-                    <span className="indice">{ebcIdx}. </span>
-                    <span className={!vssTema ? 'pv-empty' : ''}>{pv(vssTema,'Tema')}</span>
-                    <span> ({vssTempo})</span>
-                  </div>
-                  <div className="resp"><span className={!vssResp ? 'pv-empty' : ''}>{pv(vssResp)}</span></div>
-                </div>
-              </div>
-            )}
-          </section>
-
-          <section className="final">
-            <div className="fixo-b">
-              <span>• Comentários Finais (1 min)</span>
-              <div className="final-bottom">
-                <span>• Cântico: <span className={!cantico3 ? 'pv-empty' : ''}>{pv(cantico3)}</span></span>
-                <span>Oração Final: <span className={!oracaoFinal ? 'pv-empty' : ''}>{pv(oracaoFinal)}</span></span>
-              </div>
-            </div>
-          </section>
-        </article>
-      </div>
       </div>{/* /page-wrap */}
     </>
   )
@@ -780,7 +780,7 @@ const VM_STYLES = `
   }
   .sec-icon { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
   .sec-geral .sec-icon { background: var(--ed-acc); }
-  .sec-tes   .sec-icon { background: #3b7d8b; }
+  .sec-tes   .sec-icon { background: #565a5d; }
   .sec-fac   .sec-icon,
   .sec-vida  .sec-icon { background: #fff; }
   .sec-final .sec-icon { background: var(--ed-muted); }
@@ -792,18 +792,18 @@ const VM_STYLES = `
   .sec-final .sec-name { color: var(--ed-muted); }
   .chevron { font-size:12px; transition: transform .25s; }
   .sec-geral .chevron { color: var(--ed-acc); }
-  .sec-tes   .chevron { color: #3b7d8b; }
+  .sec-tes   .chevron { color: #565a5d; }
   .sec-fac   .chevron,
   .sec-vida  .chevron { color: rgba(255,255,255,.7); }
   .sec-final .chevron { color: var(--ed-muted); }
   /* Cabeçalhos temáticos */
   .sec-geral .editor-section-header { background: linear-gradient(90deg,#eef0ff,#f5f6ff); border-bottom:2px solid #c4cbf4; }
   .sec-geral .editor-section-header:hover { background: linear-gradient(90deg,#e4e7ff,#eef0ff); }
-  .sec-tes   .editor-section-header { background: linear-gradient(90deg,#d4eff4,#eaf6f9); border-bottom:2px solid #3b7d8b; }
+  .sec-tes   .editor-section-header { background: linear-gradient(90deg,#d4eff4,#eaf6f9); border-bottom:2px solid #565a5d; }
   .sec-tes   .editor-section-header:hover { background: linear-gradient(90deg,#c2e8ef,#d4eff4); }
-  .sec-fac   .editor-section-header { background: linear-gradient(90deg,#d38f00,#e8a81a); border-bottom:2px solid #b37800; }
-  .sec-fac   .editor-section-header:hover { background: linear-gradient(90deg,#bc7f00,#d38f00); }
-  .sec-vida  .editor-section-header { background: linear-gradient(90deg,#be2e13,#d94a2b); border-bottom:2px solid #a0240e; }
+  .sec-fac   .editor-section-header { background: linear-gradient(90deg,#be8801,#e8a81a); border-bottom:2px solid #b37800; }
+  .sec-fac   .editor-section-header:hover { background: linear-gradient(90deg,#bc7f00,#be8801); }
+  .sec-vida  .editor-section-header { background: linear-gradient(90deg,#7f0025,#d94a2b); border-bottom:2px solid #a0240e; }
   .sec-vida  .editor-section-header:hover { background: linear-gradient(90deg,#a82510,#c73d22); }
   .sec-final .editor-section-header { background: linear-gradient(90deg,#f0f0f5,#f7f7fb); border-bottom:2px solid #c0c4d8; }
   .sec-final .editor-section-header:hover { background: linear-gradient(90deg,#e6e6ef,#f0f0f5); }
@@ -852,9 +852,9 @@ const VM_STYLES = `
   .fixo-a { display:flex; flex-direction:column; gap:.2cm; margin-left:1.25cm; position:relative; top:-.3cm; font-size:12pt; line-height:1.5; }
   .fixo-b { display:flex; flex-direction:column; gap:.15cm; margin-left:1.25cm; font-size:12pt; line-height:1.5; margin-top:5px; }
   .topo  { display:flex; align-items:center; gap:5px; }
-  .tes   { background:#3b7d8b; width:66%; color:#fff; font-weight:600; height:35px; }
-  .famemi{ background:#d38f00; width:66%; color:#fff; font-weight:600; margin-top:20px; height:35px; }
-  .novida{ background:#be2e13; width:66%; color:#fff; font-weight:600; height:35px; margin-top:20px; }
+  .tes   { background:#565a5d; width:66%; color:#fff; font-weight:600; height:35px; }
+  .famemi{ background:#be8801; width:66%; color:#fff; font-weight:600; margin-top:20px; height:35px; }
+  .novida{ background:#7f0025; width:66%; color:#fff; font-weight:600; height:35px; margin-top:20px; }
   .topo p { font-size:12pt; margin:2px 0; }
   .topo img { height:28px; }
   .des-res { display:flex; justify-content:space-between; align-items:flex-start; }
