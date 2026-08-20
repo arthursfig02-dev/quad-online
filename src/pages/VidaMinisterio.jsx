@@ -61,8 +61,9 @@ function Field({ label, id, placeholder, value, onChange, type = 'text', min, ma
 
 /* ─── Card dinâmico Faça seu Melhor ──────────────────── */
 function FacCard({ item, idx, onUpdate, onRemove, onDragStart, onDragEnd, onDragOver, onDrop }) {
-  const tipos = ['Iniciando Conversas', 'Cultivando o Interesse', 'Explicando suas Crenças', 'Fazendo Discípulos', 'Discurso']
+  const tipos = ['Iniciando Conversas', 'Cultivando o Interesse', 'Explicando suas Crenças', 'Fazendo Discípulos', 'Discurso', 'O que você diria?']
   const tempos = ['1 min', '2 min', '3 min', '4 min', '5 min', '6 min', '7 min', '8 min']
+  const isSingle = item.tipo === 'Discurso' || item.tipo === 'O que você diria?'
   return (
     <div
       className="dyn-card"
@@ -93,15 +94,17 @@ function FacCard({ item, idx, onUpdate, onRemove, onDragStart, onDragEnd, onDrag
       </div>
       <div className="field-row">
         <div className="field-group">
-          <label>Estudante</label>
+          <label>{isSingle ? 'Responsável' : 'Estudante'}</label>
           <input type="text" placeholder="Nome" value={item.est}
             onChange={e => onUpdate({ ...item, est: e.target.value })} />
         </div>
-        <div className="field-group">
-          <label>Ajudante</label>
-          <input type="text" placeholder="Nome" value={item.aju}
-            onChange={e => onUpdate({ ...item, aju: e.target.value })} />
-        </div>
+        {!isSingle && (
+          <div className="field-group">
+            <label>Ajudante</label>
+            <input type="text" placeholder="Nome" value={item.aju}
+              onChange={e => onUpdate({ ...item, aju: e.target.value })} />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -658,21 +661,30 @@ export default function VidaMinisterio() {
                 {/*<img src={facImg} alt="Faça seu melhor" />*/}
                 <p style={{ marginLeft: '15px' }}>FAÇA SEU MELHOR NO MINISTÉRIO</p>
               </div>
-              {facItems.map(item => (
-                <div className="bloco" key={item.id}>
-                  <div className="des-res">
-                    <div className="des">
-                      <span className="indice">{facIdxMap[item.id]}. </span>
-                      <span>{item.tipo}</span>
-                      <span> ({item.tempo})</span>
-                    </div>
-                    <div className="resp-est-aju">
-                      <span>Estudante: <span className={!item.est ? 'pv-empty' : ''}>{item.est || '—'}</span></span>
-                      <span>Ajudante: <span className={!item.aju ? 'pv-empty' : ''}>{item.aju || '—'}</span></span>
+              {facItems.map(item => {
+                const isSingle = item.tipo === 'Discurso' || item.tipo === 'O que você diria?'
+                return (
+                  <div className="bloco" key={item.id}>
+                    <div className="des-res">
+                      <div className="des">
+                        <span className="indice">{facIdxMap[item.id]}. </span>
+                        <span>{item.tipo}</span>
+                        <span> ({item.tempo})</span>
+                      </div>
+                      {isSingle ? (
+                        <div className="resp">
+                          <span className={!item.est ? 'pv-empty' : ''}>{item.est || '—'}</span>
+                        </div>
+                      ) : (
+                        <div className="resp-est-aju">
+                          <span>Estudante: <span className={!item.est ? 'pv-empty' : ''}>{item.est || '—'}</span></span>
+                          <span>Ajudante: <span className={!item.aju ? 'pv-empty' : ''}>{item.aju || '—'}</span></span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </section>
 
             <section className="nosvida">
