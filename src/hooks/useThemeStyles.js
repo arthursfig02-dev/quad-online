@@ -7,7 +7,7 @@ import { useExportConfig } from '../context/ExportConfigContext'
  * do documento exportado (preview/clone), sobrescrevendo as cores
  * originais de acordo com o estilo configurado.
  *
- * module: 'rp' | 'dm' | 'pc'
+ * module: 'rp' | 'dm' | 'pc' | 'al' | 'eb'
  * Vida e Ministério (vm) é ignorado — retorna string vazia.
  */
 export function useThemeStyles(module) {
@@ -158,6 +158,36 @@ function getPrintCSS(module) {
     }
   `
 
+  if (module === 'eb') return `
+    .eb-document {
+      color: #000 !important;
+    }
+    .eb-header {
+      background: #fff !important;
+      border-bottom-color: #000 !important;
+    }
+    .eb-header h1,
+    .eb-header p,
+    .eb-date {
+      color: #000 !important;
+    }
+    .eb-group {
+      border-color: #666 !important;
+    }
+    .eb-group-header {
+      background: #e8e8e8 !important;
+    }
+    .eb-group-header > span {
+      background: #fff !important;
+      border: 1px solid #000 !important;
+      color: #000 !important;
+    }
+    .eb-people,
+    .eb-people > div + div {
+      border-color: #666 !important;
+    }
+  `
+
   return ''
 }
 
@@ -287,6 +317,31 @@ function getColorCSS(module, color) {
     }
     .al-semanas-table td {
       border-color: #bbb !important;
+    }
+  `
+
+  if (module === 'eb') return `
+    .eb-header {
+      background: ${color} !important;
+      border-bottom-color: ${color} !important;
+    }
+    .eb-header h1,
+    .eb-header p,
+    .eb-date {
+      color: #fff !important;
+    }
+    .eb-group {
+      border-color: ${color} !important;
+    }
+    .eb-group-header {
+      background: ${colorLight} !important;
+    }
+    .eb-group-header > span {
+      background: ${color} !important;
+    }
+    .eb-location i,
+    .eb-people h3 {
+      color: ${color} !important;
     }
   `
 

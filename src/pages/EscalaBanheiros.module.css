@@ -1,0 +1,64 @@
+.page { min-height: 100%; margin-top: var(--shell-total-top); background: #f4f8f7; }
+.content { width: min(1240px, 100%); margin: 0 auto; padding: 26px 28px 52px; }
+.notice { display: flex; align-items: center; gap: 10px; color: #225d57; background: #e2f3ee; border: 1px solid #c7e8df; border-radius: 10px; padding: 11px 14px; font-size: 13px; }
+.notice i { color: #176b63; }
+.eventCard { display: flex; align-items: end; justify-content: space-between; gap: 22px; margin-top: 18px; padding: 18px 20px; background: #fff; border: 1px solid #d8e7e4; border-radius: 12px; box-shadow: 0 2px 8px rgba(28, 81, 73, .04); }
+.eventTitle { display: flex; align-items: center; gap: 11px; min-width: 205px; }.eventTitle > i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; background: #e2f3ee; color: #176b63; }.eventTitle h2 { font-size: 20px; }
+.eventFields { display: grid; width: min(100%, 590px); grid-template-columns: minmax(0, 1fr) 160px; gap: 12px; }.eventFields label { display: flex; flex-direction: column; gap: 7px; color: #315c57; font-size: 12px; font-weight: 700; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0 24px; }
+.stat { display: flex; align-items: center; gap: 11px; padding: 16px; background: #fff; border: 1px solid #d8e7e4; border-radius: 12px; color: #536e6b; font-size: 13px; box-shadow: 0 2px 8px rgba(28, 81, 73, .04); }
+.stat i { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #e2f3ee; color: #176b63; }
+.stat strong { color: #123d38; font-size: 17px; }
+.workspace { display: grid; grid-template-columns: minmax(400px, .9fr) minmax(460px, 1.1fr); align-items: start; gap: 22px; }
+.formCard, .listSection { background: #fff; border: 1px solid #d8e7e4; border-radius: 14px; box-shadow: 0 8px 24px rgba(28, 81, 73, .06); }
+.formCard { padding: 24px; position: sticky; top: calc(var(--shell-total-top) + 18px); }
+.sectionTitle, .listHeading, .groupTop, .cardActions { display: flex; align-items: center; }
+.sectionTitle, .listHeading { justify-content: space-between; gap: 12px; }
+.eyebrow { color: #5a928a; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; }
+h2 { margin-top: 3px; color: #123d38; font-family: 'Barlow Condensed', sans-serif; font-size: 24px; letter-spacing: .4px; }
+.textButton, .clearButton { border: 0; background: transparent; color: #176b63; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.form { display: flex; flex-direction: column; gap: 16px; margin-top: 23px; }
+.form label { display: flex; flex-direction: column; gap: 7px; color: #315c57; font-size: 12px; font-weight: 700; }
+input, textarea { width: 100%; border: 1px solid #c8ddda; border-radius: 8px; color: #173e3a; background: #fbfefd; padding: 10px 11px; font: inherit; font-size: 14px; outline: none; transition: border-color .15s, box-shadow .15s; }
+input:focus, textarea:focus { border-color: #176b63; box-shadow: 0 0 0 3px rgba(23,107,99,.12); }
+textarea { resize: vertical; line-height: 1.35; }
+.twoColumns, .teams, .peopleColumns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.help { margin-top: -10px; color: #76928f; font-size: 11px; }
+.women, .men { padding: 11px; border-radius: 10px; }
+.women { background: #fff6fa; border: 1px solid #f4d7e4; color: #a15075; }
+.men { background: #f1f8fc; border: 1px solid #cde4f1; color: #337396; }
+.teamTitle { font-size: 12px; font-weight: 700; }
+.personInputs { display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+.personRow { display: flex; align-items: center; gap: 6px; }
+.personRow input { min-width: 0; padding: 8px 9px; background: #fff; font-size: 12px; }
+.personRow button { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; border: 1px solid currentColor; border-radius: 6px; background: transparent; color: inherit; cursor: pointer; opacity: .75; }
+.personRow button:hover { background: rgba(255, 255, 255, .7); opacity: 1; }
+.addPersonButton { display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 1px dashed currentColor; border-radius: 8px; background: rgba(255, 255, 255, .5); color: inherit; font: inherit; font-size: 12px; cursor: pointer; transition: background .18s; }
+.addPersonButton:hover { background: rgba(255, 255, 255, .9); }
+.checkbox { flex-direction: row !important; align-items: center; gap: 8px !important; color: #456864 !important; cursor: pointer; }
+.checkbox input { width: 16px; height: 16px; accent-color: #176b63; }
+.actions { display: flex; gap: 12px; padding-top: 2px; }
+.saveButton { border: 0; border-radius: 8px; padding: 11px 14px; background: #176b63; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(23,107,99,.18); }
+.saveButton:hover { background: #125750; }
+.listSection { overflow: hidden; }
+.listHeading { padding: 22px 24px; border-bottom: 1px solid #e3eeec; }
+.counter { color: #176b63; background: #e2f3ee; border-radius: 20px; padding: 5px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.groupList { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.groupCard { border: 1px solid #d9e8e5; border-radius: 11px; padding: 15px; }
+.groupTop { gap: 11px; }
+.order { display: grid; place-items: center; flex: 0 0 33px; height: 33px; color: #176b63; background: #e2f3ee; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.groupName { min-width: 0; flex: 1; }
+.groupName h3 { overflow: hidden; color: #173e3a; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.groupName p { margin-top: 3px; color: #6e8985; font-size: 12px; }
+.active, .inactive { border-radius: 12px; padding: 3px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.active { color: #16714f; background: #def4e8; }.inactive { color: #8a6a1e; background: #fff3d7; }
+.locationLine { display: flex; gap: 7px; margin: 13px 0 12px 44px; color: #52706c; font-size: 12px; line-height: 1.3; }.locationLine i { color: #176b63; }
+.peopleColumns { margin-left: 44px; }.peopleWomen, .peopleMen { padding: 9px 11px; border-radius: 8px; min-height: 71px; }.peopleWomen { background: #fff6fa; }.peopleMen { background: #f1f8fc; }
+.peopleWomen > p { color: #a15075; }.peopleMen > p { color: #337396; }.peopleColumns p { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; }.peopleColumns strong { margin-left: auto; }
+.peopleColumns ul { display: flex; flex-wrap: wrap; gap: 4px 9px; list-style: none; margin-top: 7px; }.peopleColumns li { color: #506966; font-size: 11px; }.peopleColumns li:not(:last-child)::after { content: '·'; margin-left: 9px; color: #9eb7b3; }.noPeople { display: block; margin-top: 8px; color: #91a8a5; font-size: 10px; font-style: italic; }
+.cardActions { justify-content: flex-end; gap: 13px; margin-top: 13px; padding-top: 10px; border-top: 1px solid #edf3f2; }.cardActions button { border: 0; background: transparent; color: #39736b; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }.cardActions .removeButton { color: #b55050; }
+.empty { display: flex; min-height: 338px; flex-direction: column; align-items: center; justify-content: center; padding: 35px; text-align: center; }.empty i { color: #8cbab3; font-size: 38px; }.empty h3 { margin: 14px 0 5px; color: #315c57; font-size: 16px; }.empty p { max-width: 310px; color: #728b88; font-size: 13px; line-height: 1.45; }
+.exportSource { position: fixed; left: -9999px; top: 0; width: 21cm; pointer-events: none; }.exportDocument { width: 21cm; min-height: 29.7cm; background: #fff; color: #173e3a; font-family: 'Barlow', sans-serif; }.exportHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: .34cm .62cm; border-bottom: 3px solid #176b63; background: #edf7f4; }.exportHeader > div:first-child > p { color: #176b63; font-size: 8.5pt; font-weight: 700; letter-spacing: 1.1px; }.exportHeader h1 { margin-top: 2px; color: #123d38; font-family: 'Barlow Condensed', sans-serif; font-size: 19pt; letter-spacing: .4px; }.exportDate { display: flex; align-items: center; gap: 8px; color: #315c57; font-size: 14pt; font-weight: 700; white-space: nowrap; }.exportBody { padding: .52cm .65cm .7cm; }.exportIntro { margin-bottom: .4cm; color: #55736e; font-size: 11.5pt; }.exportGroups { display: flex; flex-direction: column; gap: .26cm; }.exportGroup { break-inside: avoid; border: 1px solid #cfe1dd; border-radius: 8px; overflow: hidden; }.exportGroupHeader { display: flex; align-items: center; gap: 10px; padding: .22cm .26cm; background: #f5faf8; }.exportGroupHeader > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 6px; background: #176b63; color: #fff; font-size: 10pt; font-weight: 700; }.exportGroupHeader h2 { color: #173e3a; font-family: 'Barlow Condensed', sans-serif; font-size: 17pt; }.exportGroupHeader p { margin-top: 2px; color: #5f7f7a; font-size: 10.5pt; }.exportGroupHeader small { margin-left: auto; color: #16714f; font-size: 9pt; font-weight: 700; }.exportLocation { margin: .2cm .26cm; color: #456864; font-size: 10.5pt; }.exportLocation i { color: #176b63; }.exportPeople { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid #e0ece9; }.exportPeople > div { min-height: .82cm; padding: .18cm .26cm; }.exportPeople > div + div { border-left: 1px solid #e0ece9; }.exportPeople h3 { color: #176b63; font-size: 9.5pt; text-transform: uppercase; }.exportPeople p { margin-top: 3px; color: #4f6965; font-size: 10.5pt; line-height: 1.4; }.exportEmpty { padding: 1.5cm 0; color: #718b87; text-align: center; font-size: 12pt; }
+@media (max-width: 900px) { .workspace { grid-template-columns: 1fr; }.formCard { position: static; }.listSection { min-height: auto; } }
+@media (max-width: 699px) { .page { margin-top: 0; } }
+@media (max-width: 560px) { .content { padding: 18px 14px 42px; }.eventCard { align-items: stretch; flex-direction: column; }.eventFields { width: 100%; grid-template-columns: 1fr; }.stats { grid-template-columns: 1fr; gap: 8px; }.stat { padding: 11px 13px; }.twoColumns, .teams, .peopleColumns { grid-template-columns: 1fr; }.peopleColumns { margin-left: 0; }.locationLine { margin-left: 0; }.formCard { padding: 18px; }.listHeading { padding: 18px; }.groupList { padding: 10px; }.groupCard { padding: 13px; } }

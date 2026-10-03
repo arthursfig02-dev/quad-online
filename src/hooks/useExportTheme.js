@@ -10,7 +10,7 @@ const STYLE_TAG_ID = 'export-theme-override'
  * applyTheme(el)  → injeta <style> de tema dentro do elemento capturado
  * removeTheme(el) → remove o <style> após a captura
  *
- * module: 'rp' | 'dm' | 'pc' | 'vm'
+ * module: 'rp' | 'dm' | 'pc' | 'al' | 'eb' | 'vm'
  *   'vm' → nunca aplica nada (bloqueado pelo useThemeStyles)
  */
 export function useExportTheme(module) {
