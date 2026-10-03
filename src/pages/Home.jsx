@@ -39,6 +39,13 @@ const CARDS = [
     title: 'Arranjo de Limpeza',
     desc:  'Gere o quadro mensal de rotação dos grupos de limpeza do Salão do Reino.',
   },
+  {
+    to:    '/escala-banheiros',
+    icon:  'fa-restroom',
+    color: '#176b63',
+    title: 'Escala de Banheiros',
+    desc:  'Cadastre grupos de revezamento por horário, local e equipes feminina e masculina para eventos.',
+  },
 ]
 
 export default function Home() {

@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/designacoes-mecanicas',  icon: 'fa-list-check',          label: 'Designações Mecânicas' },
   { to: '/programacao-campo',      icon: 'fa-calendar-days',       label: 'Programação de Campo'  },
   { to: '/arranjo-limpeza',        icon: 'fa-broom',               label: 'Arranjo de Limpeza'    },
+  { to: '/escala-banheiros',       icon: 'fa-restroom',            label: 'Escala de Banheiros'   },
 ]
 
 export default function SideMenu({ open, onClose, onToggle, isMobile }) {

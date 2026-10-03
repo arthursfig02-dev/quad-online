@@ -12,7 +12,7 @@ const STYLE_TAG_ID = 'export-theme-override'
  * Sempre que o config muda (estilo ou cor), o <style> é reinjetado
  * automaticamente — sem precisar chamar applyTheme manualmente.
  *
- * module: 'rp' | 'dm' | 'pc'
+ * module: 'rp' | 'dm' | 'pc' | 'al' | 'eb'
  */
 export function useThemeLive(ref, module) {
   const themeCSS = useThemeStyles(module)
